@@ -1,0 +1,33 @@
+{
+  "name": "vue2-to-composition-api",
+  "version": "1.0.1",
+  "description": "Vue2 Opitons api to Vue 3 Composition api",
+  "main": "dist/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wd3322/vue2-to-composition-api"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --hot  --inline",
+    "build": "webpack --display-error-details --config webpack.config.js"
+  },
+  "keywords": [
+    "vue2 opitons api to vue3 composition api",
+    "vue2 opitons api",
+    "vue3 composition api",
+    "vue api conversion",
+    "to vue3"
+  ],
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "js-beautify": "^1.14.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "babel-loader": "^8.2.2",
+    "webpack": "^3.12.0",
+    "webpack-dev-server": "^2.11.5"
+  }
+}
