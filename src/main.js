@@ -1,13 +1,13 @@
 
 /*
 * name: vue2-to-composition-api
-* version: 1.0.1
-* date: 2020-07-10
+* version: 1.0.2
+* date: 2020-07-11
 * e-mail: diquick@qq.com
 * author: wd3322
 */
 
-const Vue2opitonsToVue3composition = (entrySrciptContent = '', options = {}) => {
+const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
   if (typeof entrySrciptContent === 'string' && typeof options === 'object') {
     try {
       // output srcipt content init
@@ -313,11 +313,6 @@ const Vue2opitonsToVue3composition = (entrySrciptContent = '', options = {}) => 
 
       // util methods init
       const utilMethods = {
-        setPolyfill: () => {
-          String.prototype.replaceAll = function(s1, s2) {
-            return this.replace(new RegExp(s1, 'gm'), s2)
-          }
-        },
         addImport: (type, value) => {
           if (typeof type === 'string' && typeof value === 'string') {
             const importContent = vmContent.import[type]
@@ -558,9 +553,6 @@ const Vue2opitonsToVue3composition = (entrySrciptContent = '', options = {}) => 
         }
       }
 
-      // set polyfill
-      utilMethods.setPolyfill()
-
       // vm set content methods runing
       for (const prop in vmSetContentMethods) {
         if (typeof vmSetContentMethods[prop] === 'function') {
@@ -573,7 +565,7 @@ const Vue2opitonsToVue3composition = (entrySrciptContent = '', options = {}) => 
 
       // debug console log
       if (options.isDebug) {
-        console.log('Vue2opitonsToVue3composition', {
+        console.log('Vue2ToCompositionApi', {
           entrySrciptContent,
           outputSrciptContent,
           vmBody,
@@ -591,4 +583,4 @@ const Vue2opitonsToVue3composition = (entrySrciptContent = '', options = {}) => 
   }
 }
 
-export default Vue2opitonsToVue3composition
+export default Vue2ToCompositionApi

@@ -182,9 +182,9 @@ const store = $vm.proxy.$store
 
 Package: vue2-to-composition-api
 
-Version: 1.0.1
+Version: 1.0.2
 
-Date: 2020-07-10
+Date: 2020-07-11
 
 E-mail: diquick@qq.com
 
