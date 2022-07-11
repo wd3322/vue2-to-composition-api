@@ -1,6 +1,6 @@
 # Vue2 Opitons api to Vue 3 Composition api
 
-## 官方网站
+## 网站
 
 [Github: vue2-to-composition-api](https://wd3322.github.io/to-vue3/)
 
