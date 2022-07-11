@@ -36,11 +36,6 @@
 npm install vue2-to-composition-api
 ```
 
-## Install 安装
-```node
-npm install vue2-to-composition-api
-```
-
 ## Conversion 使用转换
 ```javascript
 import Vue2ToCompositionApi from 'vue2-to-composition-api'
@@ -184,10 +179,6 @@ const store = $vm.proxy.$store
 ---
 
 Package: vue2-to-composition-api
-
-Version: 1.0.2
-
-Date: 2020-07-11
 
 E-mail: diquick@qq.com
 
