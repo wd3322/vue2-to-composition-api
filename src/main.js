@@ -1,8 +1,6 @@
 
 /*
-* name: vue2-to-composition-api
-* version: 1.0.2
-* date: 2020-07-11
+* package: vue2-to-composition-api
 * e-mail: diquick@qq.com
 * author: wd3322
 */
@@ -85,11 +83,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
         filters: Object.keys(vmContent.filters),
         lifeCycle: Object.keys(vmContent.lifeCycle),
         import: () => Object.keys(vmContent.import),
-        use: () => Object.keys(vmContent.use),
-        vmMethods: [
-          '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
-          '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'
-        ]
+        use: () => Object.keys(vmContent.use)
       }
 
       // vm output init
@@ -114,8 +108,8 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.props = `const props = defineProps(${utilMethods.getPropsStr(vmContent.props)})`
           } else if (typeof vmContent.props === 'object' && vmContent.props !== null) {
             for (const prop in vmContent.props) {
-              const propContent = vmContent.props[prop]
-              vmOutput.props = vmOutput.props.concat(`${prop}: ${utilMethods.getPropsStr(propContent)},\n`)
+              const propsContent = vmContent.props[prop]
+              vmOutput.props = vmOutput.props.concat(`${prop}: ${utilMethods.getPropsStr(propsContent)},\n`)
             }
             if (vmKeys.props.length > 0) {
               vmOutput.props = `const props = defineProps({\n${vmOutput.props.substring(0, vmOutput.props.length - 2)}\n})`
@@ -123,11 +117,8 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
         },
         data: () => {
-          const dataFunctionStr = utilMethods.getFunctionStr(vmBody.data)
+          const dataFunctionStr = utilMethods.getFunctionStr(vmBody.data, { useData: true })
           vmOutput.data = dataFunctionStr.body.substring(dataFunctionStr.body.indexOf('return {') + 9, dataFunctionStr.body.length - 5)
-          if (vmOutput.data.includes(') {') || vmOutput.data.includes('=> {')) {
-            utilMethods.setDataStr(vmContent.dataOptions)
-          }
           if (vmKeys.data.length > 0) {
             vmOutput.data = `const data = reactive({\n${vmOutput.data.substring(0, vmOutput.data.length - 2)}\n})`
             utilMethods.addImport('vue', 'reactive')
@@ -333,6 +324,17 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
+        getKeysArr: (value) => {
+          const result = []
+          for (const prop in value) {
+            const keys = value[prop]
+            for (const key of keys) {
+              result.push({ prop, key })
+            }
+          }
+          result.sort((a, b) => b.key.length - a.key.length)
+          return result
+        },
         getObjectStr: (value, objExcludeProps = []) => {
           let result = ''
           if (typeof value === 'function') {
@@ -356,7 +358,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
-        getFunctionStr: (value) => {
+        getFunctionStr: (value, options = {}) => {
           const result = {
             main: '',
             arg: '',
@@ -364,25 +366,39 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           if (typeof value === 'function') {
             result.main = value.toString()
-            for (const key of vmKeys.props) {
-              result.main = result.main.replaceAll(`this.${key}`, `props.${key}`)
+            for (
+              const { prop, key } of utilMethods.getKeysArr({
+                props: vmKeys.props,
+                data: vmKeys.data,
+                computed: vmKeys.computed,
+                methods: vmKeys.methods
+              })
+            ) {
+              if (prop === 'props') {
+                result.main = result.main.replaceAll(`this.${key}`, `props.${key}`)
+              } else if (prop === 'data') {
+                result.main = result.main.replaceAll(`this.${key}`,  options.useData ? `useData().${key}` : `data.${key}`)
+              } else if (prop === 'computed') {
+                result.main = result.main.replaceAll(`this.${key}`, `${key}.value`)
+              } else if (prop === 'methods') {
+                result.main = result.main.replaceAll(`this.${key}`, `${key}`)
+              }
             }
-            for (const key of vmKeys.data) {
-              result.main = result.main.replaceAll(`this.${key}`, `data.${key}`)
+            if (result.main.includes('useData()')) {
+              vmContent.use.data = 'const useData = () => data'
             }
-            for (const key of vmKeys.computed) {
-              result.main = result.main.replaceAll(`this.${key}`, `${key}.value`)
-            }
-            for (const key of vmKeys.methods) {
-              result.main = result.main.replaceAll(`this.${key}`, `${key}`)
-            }
-            for (const key of vmKeys.vmMethods) {
-              let hasVmMethods = false
+            for (
+              const key of [
+                '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
+                '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'
+              ]
+            ) {
+              let hasContent = false
               if (result.main.includes(`this.${key}`)) {
                 result.main = result.main.replaceAll(`this.${key}`, `$vm.proxy.${key}`)
-                hasVmMethods = true
+                hasContent = true
               }
-              if (hasVmMethods) {
+              if (hasContent) {
                 utilMethods.addImport('vue', 'getCurrentInstance')
                 vmContent.use.vm = 'const $vm = getCurrentInstance()'
               }
@@ -521,35 +537,6 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             result = `${value}`
           }
           return result
-        },
-        setDataStr: (value, keyIndex = 0) => {
-          if (
-            typeof value === 'object' && value !== null &&
-            typeof keyIndex === 'number' && !isNaN(keyIndex)
-          ) {
-            for (const prop in value) {
-              const dataContent = value[prop]
-              if (typeof dataContent === 'function') {
-                const dataFunctionStr = utilMethods.getFunctionStr(dataContent)
-                const isUseData = vmKeys.data.some(key => dataFunctionStr.body.includes(`data.${key}`))
-                if (isUseData) {
-                  const selfKeyIndex = vmOutput.data.indexOf(prop, keyIndex)
-                  const afterBodyStr = vmOutput.data.substring(selfKeyIndex, vmOutput.data.length)
-                  const insertBodyIndex = selfKeyIndex + Math.min(
-                    ...utilMethods.getIndexArr([
-                      { str: ') {', start: 0, append: true },
-                      { str: '=> {', start: 0, append: true }
-                    ], afterBodyStr)
-                  )
-                  vmOutput.data = `${vmOutput.data.substring(0, insertBodyIndex)}\nconst data = useData()${vmOutput.data.substring(insertBodyIndex, vmOutput.data.length)}`
-                  vmContent.use.data = 'const useData = () => data'
-                }
-              } else if (typeof dataContent === 'object' && dataContent !== null) {
-                const selfKeyIndex = vmOutput.data.indexOf(prop, keyIndex)
-                utilMethods.setDataStr(dataContent, selfKeyIndex)
-              }
-            }
-          }
         }
       }
 
