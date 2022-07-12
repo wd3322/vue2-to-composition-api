@@ -1,11 +1,10 @@
-
 /*
 * package: vue2-to-composition-api
 * e-mail: diquick@qq.com
 * author: wd3322
 */
 
-const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
+const Vue2ToCompositionApi = function(entrySrciptContent = '', options = {}) {
   if (typeof entrySrciptContent === 'string' && typeof options === 'object') {
     try {
       // output srcipt content init
@@ -103,7 +102,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
 
       // vm set content methods init
       const vmSetContentMethods = {
-        porps: () => {
+        porps() {
           if (vmContent.props instanceof Array) {
             vmOutput.props = `const props = defineProps(${utilMethods.getPropsStr(vmContent.props)})`
           } else if (typeof vmContent.props === 'object' && vmContent.props !== null) {
@@ -116,7 +115,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             }
           }
         },
-        data: () => {
+        data() {
           const dataFunctionStr = utilMethods.getFunctionStr(vmBody.data, { useData: true })
           const dataContentStr = dataFunctionStr.body.substring(dataFunctionStr.body.indexOf('return {') + 9, dataFunctionStr.body.length - 7)
           if (vmKeys.data.length > 0) {
@@ -124,7 +123,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             utilMethods.addImport('vue', 'reactive')
           }
         },
-        computed: () => {
+        computed() {
           for (const prop in vmContent.computed) {
             const computedContent = vmContent.computed[prop]
             if (typeof computedContent === 'function') {
@@ -155,7 +154,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             utilMethods.addImport('vue', 'computed')
           }
         },
-        watch: () => {
+        watch() {
           for (const prop in vmContent.watch) {
             const watchContent = vmContent.watch[prop]
             if (typeof watchContent === 'function') {
@@ -194,7 +193,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             utilMethods.addImport('vue', 'watch')
           }
         },
-        lifeCycle: () => {
+        lifeCycle() {
           for (const prop in vmContent.lifeCycle) {
             const lifeCycleContent = vmContent.lifeCycle[prop]
             const lifeCycleContentName = `on${lifeCycleContent.name.substring(0, 1).toUpperCase()}${lifeCycleContent.name.substring(1)}`
@@ -229,7 +228,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.lifeCycle = vmOutput.lifeCycle.substring(0, vmOutput.lifeCycle.length - 2)
           }
         },
-        methods: () => {
+        methods() {
           for (const prop in vmContent.methods) {
             const methodsContent = vmContent.methods[prop]
             const methodsFunctionStr = utilMethods.getFunctionStr(methodsContent)
@@ -243,7 +242,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.methods = vmOutput.methods.substring(0, vmOutput.methods.length - 2)
           }
         },
-        filters: () => {
+        filters() {
           for (const prop in vmContent.filters) {
             const filtersContent = vmContent.filters[prop]
             const filtersFunctionStr = utilMethods.getFunctionStr(filtersContent)
@@ -255,7 +254,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.filters = vmOutput.filters.substring(0, vmOutput.filters.length - 2)
           }
         },
-        import: () => {
+        import() {
           for (const prop in vmContent.import) {
             const importContent = vmContent.import[prop]
             if (importContent.length > 0) {
@@ -266,7 +265,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.import = vmOutput.import.substring(0, vmOutput.import.length - 1)
           }
         },
-        use: () => {
+        use() {
           for (const prop in vmContent.use) {
             const useContent = vmContent.use[prop]
             vmOutput.use = vmOutput.use.concat(`${useContent}\n`)
@@ -275,7 +274,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.use = vmOutput.use.substring(0, vmOutput.use.length - 1)
           }
         },
-        emits: () => {
+        emits() {
           for (const emits of vmContent.emits) {
             const emitsContent = emits.split('update:').pop()
             vmOutput.emits = vmOutput.emits.concat(`'${emitsContent}', `)
@@ -284,7 +283,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.emits = `const emit = defineEmits([${vmOutput.emits.substring(0, vmOutput.emits.length - 2)}])`
           }
         },
-        refs: () => {
+        refs() {
           for (const refs of vmContent.refs) {
             vmOutput.refs = vmOutput.refs.concat(`const ${refs} = ref(null)\n`)
           }
@@ -292,7 +291,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
             vmOutput.refs = vmOutput.refs.substring(0, vmOutput.refs.length - 1)
           }
         },
-        output: () => {
+        output() {
           for (const prop in vmOutput) {
             const vmOutputContent = vmOutput[prop]
             if (vmOutputContent) {
@@ -304,7 +303,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
 
       // util methods init
       const utilMethods = {
-        getIndexArr: ({ values, content, start = 0, append = false }) => {
+        getIndexArr({ values, content, start = 0, append = false }) {
           const result = []
           if (values instanceof Array && typeof content === 'string') {
             for (const value of values) {
@@ -316,20 +315,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
-        getKeysArr: (value) => {
-          const result = []
-          if (typeof value === 'object' && value !== null) {
-            for (const prop in value) {
-              const keys = value[prop]
-              for (const key of keys) {
-                result.push({ prop, key })
-              }
-            }
-            result.sort((a, b) => b.key.length - a.key.length)
-          }
-          return result
-        },
-        getObjectStr: (value, options = { objExcludeProps: [] }) => {
+        getObjectStr(value, options = { objExcludeProps: [] }) {
           let result = ''
           if (typeof value === 'function') {
             result = utilMethods.getFunctionStr(value).main
@@ -352,150 +338,14 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
-        getFunctionStr: (value, options = {}) => {
+        getFunctionStr(value, options = {}) {
           const result = {
             main: '',
             arg: '',
             body: ''
           }
           if (typeof value === 'function') {
-            result.main = value.toString()
-            for (
-              const { prop, key } of utilMethods.getKeysArr({
-                props: vmKeys.props,
-                data: vmKeys.data,
-                computed: vmKeys.computed,
-                methods: vmKeys.methods
-              })
-            ) {
-              if (prop === 'props') {
-                result.main = result.main.replaceAll(`this.${key}`, `props.${key}`)
-              } else if (prop === 'data') {
-                result.main = result.main.replaceAll(`this.${key}`, options.useData ? `useData().${key}` : `data.${key}`)
-              } else if (prop === 'computed') {
-                result.main = result.main.replaceAll(`this.${key}`, `${key}.value`)
-              } else if (prop === 'methods') {
-                result.main = result.main.replaceAll(`this.${key}`, `${key}`)
-              }
-            }
-            if (result.main.includes('useData()')) {
-              utilMethods.addUse('data')
-            }
-            for (
-              const key of [
-                '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
-                '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'
-              ]
-            ) {
-              let hasContent = false
-              if (result.main.includes(`this.${key}`)) {
-                result.main = result.main.replaceAll(`this.${key}`, `$vm.proxy.${key}`)
-                hasContent = true
-              }
-              if (hasContent) {
-                utilMethods.addImport('vue', 'getCurrentInstance')
-                utilMethods.addUse('vm')
-              }
-            }
-            if (result.main.includes('this.$attrs')) {
-              result.main = result.main.replaceAll('this.$attrs', 'attrs')
-              utilMethods.addImport('vue', 'useAttrs')
-              utilMethods.addUse('attrs')
-            }
-            if (result.main.includes('this.$slots')) {
-              result.main = result.main.replaceAll('this.$slots', 'slots')
-              utilMethods.addImport('vue', 'useSlots')
-              utilMethods.addUse('slots')
-            }
-            if (result.main.includes('this.$router')) {
-              result.main = result.main.replaceAll('this.$router', 'router')
-              utilMethods.addImport('vue-router', 'useRouter')
-              utilMethods.addUse('router')
-            }
-            if (result.main.includes('this.$route')) {
-              result.main = result.main.replaceAll('this.$route', 'route')
-              utilMethods.addImport('vue-router', 'useRoute')
-              utilMethods.addUse('route')
-            }
-            if (result.main.includes('this.$store')) {
-              result.main = result.main.replaceAll('this.$store', 'store')
-              utilMethods.addImport('vuex', 'useStore')
-              utilMethods.addUse('store')
-            }
-            if (result.main.includes('this.$nextTick')) {
-              result.main = result.main.replaceAll('this.$nextTick', 'nextTick')
-              utilMethods.addImport('vue', 'nextTick')
-            }
-            if (result.main.includes('this.$set')) {
-              result.main = result.main.replaceAll('this.$set', 'set')
-              utilMethods.addImport('vue', 'set')
-            }
-            if (result.main.includes('this.$delete')) {
-              result.main = result.main.replaceAll('this.$delete', 'del')
-              utilMethods.addImport('vue', 'del')
-            }
-            if (result.main.includes('this.$emit')) {
-              const contentArr = result.main.split('this.$emit')
-              if (contentArr.length > 1) {
-                for (let i = 1; i < contentArr.length; i++) {
-                  const beginIndex = Math.min(
-                    ...utilMethods.getIndexArr({
-                      values: [`this.$emit('`, `this.$emit("`, 'this.$emit(`'],
-                      content: result.main,
-                      start: 0,
-                      append: true
-                    })
-                  )
-                  const endIndex = Math.min(
-                    ...utilMethods.getIndexArr({
-                      values: [ `'`, `"`, '`'],
-                      content: result.main,
-                      start: beginIndex,
-                      append: false
-                    })
-                  )
-                  const emitName = result.main.substring(beginIndex, endIndex)
-                  if (emitName) {
-                    if (!vmContent.emits.includes(emitName)) {
-                      vmContent.emits.push(emitName)
-                    }
-                    result.main = result.main.replace('this.$emit', 'emit')
-                  }
-                }
-              }
-            }
-            if (result.main.includes('this.$refs')) {
-              const contentArr = result.main.split('this.$refs')
-              if (contentArr.length > 1) {
-                for (let i = 1; i < contentArr.length; i++) {
-                  const beginIndex = Math.min(
-                    ...utilMethods.getIndexArr({
-                      values: ['this.$refs.'],
-                      content: result.main,
-                      start: 0,
-                      append: true
-                    })
-                  )
-                  const endIndex = Math.min(
-                    ...utilMethods.getIndexArr({
-                      values: ['\n', '\t', ' ', '.', ',', '?', '[', ')'],
-                      content: result.main,
-                      start: beginIndex,
-                      append: false
-                    })
-                  )
-                  const refsName = result.main.substring(beginIndex, endIndex)
-                  if (refsName) {
-                    if (!vmContent.refs.includes(refsName)) {
-                      vmContent.refs.push(refsName)
-                    }
-                    result.main = `${result.main.substring(0, endIndex)}.value${result.main.substring(endIndex, result.main.length)}`
-                    result.main = result.main.replace('this.$refs.', '')
-                  }
-                }
-              }
-              utilMethods.addImport('vue', 'ref')
-            }
+            result.main = utilMethods.replaceKey(value.toString(), options)
             result.arg = result.main.substring(
               result.main.indexOf('(') + 1,
               Math.min(
@@ -521,7 +371,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
-        getPropsStr: (value, options = { functionToString: false }) => {
+        getPropsStr(value, options = { functionToString: false }) {
           let result = ''
           if (typeof value === 'function' && !options.functionToString) {
             result = `${value.name}`
@@ -544,16 +394,138 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
           }
           return result
         },
-        addImport: (type, value) => {
-          if (typeof type === 'string' && typeof value === 'string') {
+        replaceKey(value, options) {
+          let result = ''
+          if (typeof value === 'string') {
+            const contentArr = value.split('this.')
+            if (contentArr.length > 0) {
+              for (let i = 0; i < contentArr.length; i++) {
+                const content = contentArr[i]
+                const key = content.substring(0, Math.min(
+                  ...utilMethods.getIndexArr({
+                    values: ['\n', '\t', ' ', '.', ',', '?', '[', ']', ')', '('],
+                    content,
+                    start: 0,
+                    append: false
+                  })
+                ))
+                if (vmKeys.props.includes(key)) {
+                  contentArr[i] = content.replace(key, `props.${key}`)
+                } else if (vmKeys.data.includes(key)) {
+                  contentArr[i] = content.replace(key, options.useData ? `useData().${key}` : `data.${key}`)
+                } else if (vmKeys.computed.includes(key)) {
+                  contentArr[i] = content.replace(key, `${key}.value`)
+                } else if (vmKeys.methods.includes(key)) {
+                  contentArr[i] = content
+                } else if ([
+                  '$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)
+                ) {
+                  contentArr[i] = content.replace('$', '')
+                  if (key === '$attrs') {
+                    utilMethods.addImport('vue', 'useAttrs')
+                    utilMethods.addUse('attrs')
+                  } else if (key === '$slots') {
+                    utilMethods.addImport('vue', 'useSlots')
+                    utilMethods.addUse('slots')
+                  } else if (key === '$router') {
+                    utilMethods.addImport('vue-router', 'useRouter')
+                    utilMethods.addUse('router')
+                  } else if (key === '$route') {
+                    utilMethods.addImport('vue-router', 'useRoute')
+                    utilMethods.addUse('route')
+                  } else if (key === '$store') {
+                    utilMethods.addImport('vuex', 'useStore')
+                    utilMethods.addUse('store')
+                  } else if (key === '$nextTick') {
+                    utilMethods.addImport('vue', 'nextTick')
+                  } else if (key === '$set') {
+                    utilMethods.addImport('vue', 'set')
+                  } else if (key === '$delete') {
+                    contentArr[i] = contentArr[i].replace('delete', 'del')
+                    utilMethods.addImport('vue', 'del')
+                  }
+                } else if (key === '$emit') {
+                  const beginIndex = Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: [`'`, `"`, '`'],
+                      content,
+                      start: 0,
+                      append: true
+                    })
+                  )
+                  const endIndex = Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: [`'`, '"', '`'],
+                      content,
+                      start: beginIndex,
+                      append: false
+                    })
+                  )
+                  const emitName = content.substring(beginIndex, endIndex)
+                  if (emitName && !vmContent.emits.includes(emitName)) {
+                    vmContent.emits.push(emitName)
+                  }
+                  contentArr[i] = content.replace('$', '')
+                } else if (key === '$refs') {
+                  const beginIndex = Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: ['.'],
+                      content,
+                      start: 0,
+                      append: true
+                    })
+                  )
+                  const endIndex = Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: ['\n', '\t', ' ', '.', ',', '?', '[', ')'],
+                      content,
+                      start: beginIndex,
+                      append: false
+                    })
+                  )
+                  const refsName = content.substring(beginIndex, endIndex)
+                  if (refsName) {
+                    if (!vmContent.refs.includes(refsName)) {
+                      vmContent.refs.push(refsName)
+                    }
+                    contentArr[i] = content.replace('$', '').replace(refsName, `${refsName}.value`)
+                  } else {
+                    contentArr[i] = content.replace('$', '')
+                  }
+                  utilMethods.addImport('vue', 'ref')
+                } else if ([  
+                  '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
+                  '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
+                ) {
+                  contentArr[i] = content.replace(key, `vm.proxy.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
+                } else {
+                  contentArr[i] = content.replace(key, `this.${key}`)
+                }
+              }
+            }
+            result = contentArr.join('')
+          }
+          return result
+        },
+        addImport(type, value) {
+          if (
+            typeof type === 'string' &&
+            typeof value === 'string' && 
+            ['vue', 'vue-router', 'vuex'].includes(type)
+          ) {
             const importContent = vmContent.import[type]
             if (!importContent?.includes(value)) {
               importContent.push(value)
             }
           }
         },
-        addUse: (type) => {
-          if (typeof type === 'string') {
+        addUse(type) {
+          if (
+            typeof type === 'string' &&
+            ['data', 'vm', 'attrs', 'slots', 'router', 'route', 'store'].includes(type)
+          ) {
             vmContent.use[type] = {
               vm: 'const $vm = getCurrentInstance()',
               data: 'const useData = () => data',
@@ -562,7 +534,7 @@ const Vue2ToCompositionApi = (entrySrciptContent = '', options = {}) => {
               router: 'const router = useRouter()',
               route: 'const route = useRoute()',
               store: 'const store = useStore()'
-            }[type] 
+            }[type]
           }
         }
       }
