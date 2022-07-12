@@ -158,7 +158,7 @@ export default {
 
 ```javascript
 function toMarried(value) {
-	return value ? 'Yes' : 'No'
+  return value ? 'Yes' : 'No'
 }
 ```
 
