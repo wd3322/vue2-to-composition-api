@@ -1,6 +1,6 @@
 {
   "name": "vue2-to-composition-api",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Vue2 Opitons api to Vue 3 Composition api",
   "main": "dist/main.js",
   "repository": {
