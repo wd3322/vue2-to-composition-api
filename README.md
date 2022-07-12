@@ -2,16 +2,15 @@
 
 ## 网站
 
-[Github: vue2-to-composition-api](https://wd3322.github.io/to-vue3/)
-
 [Gitee: vue2-to-composition-api](http://wd3322.gitee.io/to-vue3/)
+
+[Github: vue2-to-composition-api](https://wd3322.github.io/to-vue3/)
 
 **Git地址**
 
-[Github](https://github.com/wd3322/vue2-to-composition-api)
-
 [Gitee](https://gitee.com/wd3322/vue2-to-composition-api)
 
+[Github](https://github.com/wd3322/vue2-to-composition-api)
 
 ## 在线使用
 ![home](https://wd3322.github.io/to-vue3/img/home.png)
