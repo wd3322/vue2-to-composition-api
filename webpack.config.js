@@ -3,7 +3,7 @@ const webpack = require('webpack')
  
 module.exports = {
   devtool: 'source-map',
-  entry: './src/main.js',
+  entry: './src/main.ts',
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
@@ -13,9 +13,16 @@ module.exports = {
   },
   module: {
     rules: [{
-      test: /\.js$/,
-      exclude: /node_modules|vue\/dist|vue-router\/|vue-loader\/|vue-hot-reload-api\//,
-      loader: 'babel-loader'
+      test: /\.(ts|tsx)$/,
+      exclude: /node_modules/,
+      use: [{
+        loader: 'ts-loader', /* https://github.com/TypeStrong/ts-loader */
+        options: {
+          configFile: path.resolve(__dirname, './tsconfig.json'),
+          appendTsSuffixTo: [/\.vue$/],
+          transpileOnly: true, 
+        }
+      }]
     }]
   },
   plugins: [

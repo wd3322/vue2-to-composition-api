@@ -8,9 +8,7 @@
     "url": "https://github.com/wd3322/vue2-to-composition-api"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --hot  --inline",
-    "build": "webpack --display-error-details --config webpack.config.js"
+    "build": "webpack --config webpack.config.js"
   },
   "keywords": [
     "vue2 opitons api to vue3 composition api",
@@ -27,7 +25,10 @@
     "@babel/core": "^7.15.0",
     "@babel/preset-env": "^7.15.0",
     "babel-loader": "^8.2.2",
-    "webpack": "^3.12.0",
-    "webpack-dev-server": "^2.11.5"
+    "typescript": "^4.7.4",
+    "ts-loader": "^9.3.1",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.3"
   }
 }
