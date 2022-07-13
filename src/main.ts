@@ -8,7 +8,7 @@ declare global {
   interface Window { Vue2ToCompositionApiVmBody: any }
 }
 
-function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebug: boolean} = { isDebug: false }): any {
+function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebug: boolean } = { isDebug: false }): any {
   if (typeof entrySrciptContent === 'string' && typeof options === 'object') {
     try {
       // output srcipt content init
@@ -165,7 +165,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
             if (typeof watchContent === 'function') {
               const watchFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(watchContent)
               const watchContentName: string =
-                vmKeys.props.some((key: string)=> key === watchContent.name)
+                vmKeys.props.some((key: string) => key === watchContent.name)
                   ? `props.${watchContent.name}`
                   : vmKeys.data.some((key: string) => key === watchContent.name)
                     ? `data.${watchContent.name}`
@@ -413,7 +413,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                 const content: string = contentArr[i]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
-                    values: ['\n', '\t', ' ', '.', ',', '?', '[', ']', ')', '('],
+                    values: ['\n', '\t', ' ', '.', ',', '?', '[', ']', ')', '(', '+', '-'],
                     content,
                     start: 0,
                     append: false
@@ -470,7 +470,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                 } else if (key === '$emit') {
                   const beginIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: [`'`, `"`, '`'],
+                      values: ['\'', '"', '`'],
                       content,
                       start: 0,
                       append: true
@@ -478,7 +478,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                   )
                   const endIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: [`'`, '"', '`'],
+                      values: ['\'', '"', '`'],
                       content,
                       start: beginIndex,
                       append: false
