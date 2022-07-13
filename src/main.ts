@@ -427,6 +427,13 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                   contentArr[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
                   contentArr[i] = content
+                } else if ([  
+                  '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
+                  '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
+                ) {
+                  contentArr[i] = content.replace(key, `vm.proxy.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
                 } else if ([
                   '$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)
                 ) {
@@ -503,13 +510,6 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                     contentArr[i] = content.replace('$', '')
                   }
                   utilMethods.addImport('vue', 'ref')
-                } else if ([  
-                  '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
-                  '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
-                ) {
-                  contentArr[i] = content.replace(key, `vm.proxy.${key}`)
-                  utilMethods.addImport('vue', 'getCurrentInstance')
-                  utilMethods.addUse('vm')
                 } else {
                   contentArr[i] = content.replace(key, `this.${key}`)
                 }
