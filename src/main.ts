@@ -437,7 +437,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                   '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
                   '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
                 ) {
-                  contentArr[i] = content.replace(key, `vm.proxy.${key}`)
+                  contentArr[i] = content.replace(key, `$vm.proxy.${key}`)
                   utilMethods.addImport('vue', 'getCurrentInstance')
                   utilMethods.addUse('vm')
                 } else if ([
