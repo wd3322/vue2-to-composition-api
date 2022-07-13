@@ -419,10 +419,16 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                     append: false
                   })
                 ))
+                const reset = () => {
+                  contentArr[i] = content.replace(key, `this.${key}`)
+                }
                 if (vmKeys.props.includes(key)) {
                   contentArr[i] = content.replace(key, `props.${key}`)
+                } else if (vmKeys.data.includes(key) && options.useData) {
+                  contentArr[i] = content.replace(key, `useData().${key}`)
+                  utilMethods.addUse('data')
                 } else if (vmKeys.data.includes(key)) {
-                  contentArr[i] = content.replace(key, options.useData ? `useData().${key}` : `data.${key}`)
+                  contentArr[i] = content.replace(key, `data.${key}`)
                 } else if (vmKeys.computed.includes(key)) {
                   contentArr[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
@@ -479,10 +485,14 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                     })
                   )
                   const emitName: string = content.substring(beginIndex, endIndex)
-                  if (emitName && !vmContent.emits.includes(emitName)) {
-                    vmContent.emits.push(emitName)
+                  if (emitName) {
+                    if (!vmContent.emits.includes(emitName)) {
+                      vmContent.emits.push(emitName)
+                    }
+                    contentArr[i] = content.replace('$', '')
+                  } else {
+                    reset()
                   }
-                  contentArr[i] = content.replace('$', '')
                 } else if (key === '$refs') {
                   const beginIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
@@ -505,13 +515,13 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                     if (!vmContent.refs.includes(refsName)) {
                       vmContent.refs.push(refsName)
                     }
-                    contentArr[i] = content.replace('$', '').replace(refsName, `${refsName}.value`)
+                    contentArr[i] = `${refsName}.value${content.split(refsName)[1]}`
+                    utilMethods.addImport('vue', 'ref')
                   } else {
-                    contentArr[i] = content.replace('$', '')
+                    reset()
                   }
-                  utilMethods.addImport('vue', 'ref')
                 } else {
-                  contentArr[i] = content.replace(key, `this.${key}`)
+                  reset()
                 }
               }
             }
