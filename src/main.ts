@@ -109,11 +109,13 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
       const vmSetContentMethods: any = {
         porps(): void {
           if (vmContent.props instanceof Array) {
-            vmOutput.props = `const props = defineProps(${utilMethods.getPropsStr(vmContent.props)})`
+            const propsContentStr: string = utilMethods.getPropsStr(vmContent.props)
+            vmOutput.props = `const props = defineProps(${propsContentStr})`
           } else if (typeof vmContent.props === 'object' && vmContent.props !== null) {
             for (const prop in vmContent.props) {
               const propsContent: any = vmContent.props[prop]
-              vmOutput.props = vmOutput.props.concat(`${prop}: ${utilMethods.getPropsStr(propsContent)},\n`)
+              const propsContentStr: string = utilMethods.getPropsStr(propsContent)
+              vmOutput.props = vmOutput.props.concat(`${prop}: ${propsContentStr},\n`)
             }
             if (vmKeys.props.length > 0) {
               vmOutput.props = `const props = defineProps({\n${vmOutput.props.substring(0, vmOutput.props.length - 2)}\n})`
@@ -189,7 +191,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                       ? `${vmKeys.computed}.value`
                       : prop
               if (watchContentName) {
-                vmOutput.watch = watchOptionsStr
+                vmOutput.watch = watchOptionsStr !== '{}'
                   ? vmOutput.watch.concat(
                     `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body}, ${watchOptionsStr})\n\n`
                   )
@@ -329,9 +331,9 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
           const result: number[] = []
           if (values instanceof Array && typeof content === 'string') {
             for (const value of values) {
-              const indexValue: number = content.indexOf(value, start)
-              if (indexValue !== -1) {
-                result.push(append ? indexValue + (+value.length) : indexValue)
+              const valueIndex: number = content.indexOf(value, start)
+              if (valueIndex !== -1) {
+                result.push(append ? valueIndex + (+value.length) : valueIndex)
               }
             }
           }
@@ -347,12 +349,14 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
             }
             result = `[${result.substring(0, result.length - 2)}]`
           } else if (typeof value === 'object' && value !== null) {
+            const valueKeys: string[] = []
             for (const prop in value) {
               if (!options.objExcludeProps.includes(prop)) {
                 result = result.concat(`${prop}: ${utilMethods.getObjectStr(value[prop])},\n`)
+                valueKeys.push(prop)
               }
             }
-            result = Object.keys(value).length > 0 ? `{\n${result.substring(0, result.length - 2)}\n}` : '{}'
+            result = valueKeys.length > 0 ? `{\n${result.substring(0, result.length - 2)}\n}` : '{}'
           } else if (typeof value === 'string') {
             result = `'${value}'`
           } else {
