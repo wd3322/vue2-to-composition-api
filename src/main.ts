@@ -170,27 +170,33 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                   : vmKeys.data.some((key: string) => key === watchContent.name)
                     ? `data.${watchContent.name}`
                     : vmKeys.computed.some((key: string) => key === watchContent.name)
-                      ? `${watchContent.name}.value` : ''
-              vmOutput.watch = vmOutput.watch.concat(
-                `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
-              )
-            } else if (typeof watchContent === 'object' && typeof watchContent.handler === 'function') {
+                      ? `${watchContent.name}.value`
+                      : prop
+              if (watchContentName) {
+                vmOutput.watch = vmOutput.watch.concat(
+                  `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
+                )
+              }
+            } else if (typeof watchContent === 'object' && watchContent !== null && typeof watchContent.handler === 'function') {
               const watchFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(watchContent.handler)
               const watchOptionsStr: string = utilMethods.getObjectStr(watchContent, { objExcludeProps: ['handler'] })
-              const watchContentName: string =
+              const watchContentName: string  =
                 vmKeys.props.some((key: string) => key === prop)
                   ? `props.${prop}`
                   : vmKeys.data.some((key: string) => key === prop)
                     ? `data.${prop}`
                     : vmKeys.computed.some((key: string) => key === prop)
-                      ? `${vmKeys.computed}.value` : ''
-              vmOutput.watch = watchOptionsStr
-                ? vmOutput.watch.concat(
-                  `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body}, ${watchOptionsStr})\n\n`
-                )
-                : vmOutput.watch.concat(
-                  `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
-                )
+                      ? `${vmKeys.computed}.value`
+                      : prop
+              if (watchContentName) {
+                vmOutput.watch = watchOptionsStr
+                  ? vmOutput.watch.concat(
+                    `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body}, ${watchOptionsStr})\n\n`
+                  )
+                  : vmOutput.watch.concat(
+                    `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
+                  )
+              }
             }
           }
           if (vmKeys.watch.length > 0) {
@@ -201,36 +207,38 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         lifeCycle(): void {
           for (const prop in vmContent.lifeCycle) {
             const lifeCycleContent: any = vmContent.lifeCycle[prop]
-            const lifeCycleContentName: string = `on${lifeCycleContent.name.substring(0, 1).toUpperCase()}${lifeCycleContent.name.substring(1)}`
-            const lifeCycleFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(lifeCycleContent)
-            if (['beforeCreate', 'created'].includes(lifeCycleContent.name)) {
-              vmOutput.lifeCycle = vmOutput.lifeCycle.concat(
-                lifeCycleContent.constructor.name === 'AsyncFunction'
-                  ? `async function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
-                  : `function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
-              )
-            } else if (
-              ['beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(lifeCycleContent.name)
-            ) {
-              const v3LifeCycleNameDist: any = {
-                beforeMount: 'onBeforeMount',
-                mounted: 'onMounted',
-                beforeUpdate: 'onBeforeUpdate',
-                updated: 'onUpdated',
-                beforeDestroy: 'onBeforeUnmount',
-                destroyed: 'onUnmounted',
-                activated: 'onActivated',
-                deactivated: 'onDeactivated',
-                errorCaptured: 'onErrorCaptured'
-              }
-              const v3LifeCycleName: string = v3LifeCycleNameDist[lifeCycleContent.name as string]
-              if (v3LifeCycleName) {
+            if (typeof lifeCycleContent === 'function') {
+              const lifeCycleContentName: string = `on${lifeCycleContent.name.substring(0, 1).toUpperCase()}${lifeCycleContent.name.substring(1)}`
+              const lifeCycleFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(lifeCycleContent)
+              if (['beforeCreate', 'created'].includes(lifeCycleContent.name)) {
                 vmOutput.lifeCycle = vmOutput.lifeCycle.concat(
                   lifeCycleContent.constructor.name === 'AsyncFunction'
-                    ? `${v3LifeCycleName} (async(${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
-                    : `${v3LifeCycleName} ((${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
+                    ? `async function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
+                    : `function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
                 )
-                utilMethods.addImport('vue', v3LifeCycleName)
+              } else if (
+                ['beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(lifeCycleContent.name)
+              ) {
+                const v3LifeCycleNameDist: any = {
+                  beforeMount: 'onBeforeMount',
+                  mounted: 'onMounted',
+                  beforeUpdate: 'onBeforeUpdate',
+                  updated: 'onUpdated',
+                  beforeDestroy: 'onBeforeUnmount',
+                  destroyed: 'onUnmounted',
+                  activated: 'onActivated',
+                  deactivated: 'onDeactivated',
+                  errorCaptured: 'onErrorCaptured'
+                }
+                const v3LifeCycleName: string = v3LifeCycleNameDist[lifeCycleContent.name as string]
+                if (v3LifeCycleName) {
+                  vmOutput.lifeCycle = vmOutput.lifeCycle.concat(
+                    lifeCycleContent.constructor.name === 'AsyncFunction'
+                      ? `${v3LifeCycleName} (async(${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
+                      : `${v3LifeCycleName} ((${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
+                  )
+                  utilMethods.addImport('vue', v3LifeCycleName)
+                }
               }
             }
           }
@@ -241,12 +249,14 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         methods(): void {
           for (const prop in vmContent.methods) {
             const methodsContent: any = vmContent.methods[prop]
-            const methodsFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(methodsContent)
-            vmOutput.methods = vmOutput.methods.concat(
-              methodsContent.constructor.name === 'AsyncFunction'
-                ? `async function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
-                : `function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
-            )
+            if (typeof methodsContent === 'function') {
+              const methodsFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(methodsContent)
+              vmOutput.methods = vmOutput.methods.concat(
+                methodsContent.constructor.name === 'AsyncFunction'
+                  ? `async function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
+                  : `function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
+              )
+            }
           }
           if (vmKeys.methods.length > 0) {
             vmOutput.methods = vmOutput.methods.substring(0, vmOutput.methods.length - 2)
@@ -255,10 +265,12 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         filters(): void {
           for (const prop in vmContent.filters) {
             const filtersContent: any = vmContent.filters[prop]
-            const filtersFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(filtersContent)
-            vmOutput.filters = vmOutput.filters.concat(
-              `function ${filtersContent.name} (${filtersFunctionStr.arg})\n${filtersFunctionStr.body}\n\n`
-            )
+            if (typeof filtersContent === 'function') {
+              const filtersFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(filtersContent)
+              vmOutput.filters = vmOutput.filters.concat(
+                `function ${filtersContent.name} (${filtersFunctionStr.arg})\n${filtersFunctionStr.body}\n\n`
+              )
+            }
           }
           if (vmKeys.filters.length > 0) {
             vmOutput.filters = vmOutput.filters.substring(0, vmOutput.filters.length - 2)
@@ -515,7 +527,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                     if (!vmContent.refs.includes(refsName)) {
                       vmContent.refs.push(refsName)
                     }
-                    contentArr[i] = `${refsName}.value${content.split(refsName)[1]}`
+                    contentArr[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
                     utilMethods.addImport('vue', 'ref')
                   } else {
                     reset()
