@@ -470,7 +470,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                 } else if (key === '$emit') {
                   const beginIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: ['\'', '"', '`'],
+                      values: ['$emit(\'', '$emit("', '$emit(`', '$emit([\'', '$emit(["', '$emit([`'],
                       content,
                       start: 0,
                       append: true
@@ -496,7 +496,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                 } else if (key === '$refs') {
                   const beginIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: ['.'],
+                      values: ['$refs.', '$refs?.'],
                       content,
                       start: 0,
                       append: true
