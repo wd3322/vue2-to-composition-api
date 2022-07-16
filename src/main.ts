@@ -8,8 +8,14 @@ declare global {
   interface Window { Vue2ToCompositionApiVmBody: any }
 }
 
-function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebug: boolean } = { isDebug: false }): any {
-  if (typeof entrySrciptContent === 'string' && typeof options === 'object') {
+function Vue2ToCompositionApi(
+  entrySrciptContent: string = '',
+  options: { isDebug: boolean } = { isDebug: false }
+): any {
+  if (
+    typeof entrySrciptContent === 'string' &&
+    typeof options === 'object'
+  ) {
     try {
       // output srcipt content init
       let outputSrciptContent: string = ''
@@ -59,21 +65,22 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         watch: vmBody.watch && typeof vmBody.watch === 'object' ? vmBody.watch : {},
         methods: vmBody.methods && typeof vmBody.methods === 'object' ? vmBody.methods : {},
         filters: vmBody.filters && typeof vmBody.filters === 'object' ? vmBody.filters : {},
-        lifeCycle: {},
+        hooks: {},
         import: { vue: [], 'vue-router': [], vuex: [] },
         use: {},
         emits: [],
         refs: []
       }
 
-      // vm lifeCycle content init
+      // vm hooks content init
       for (const prop in vmBody) {
         if (
-          (['beforeCreate', 'created', 'beforeMount', 'mounted',
+          ['beforeCreate', 'created', 'beforeMount', 'mounted',
             'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed',
-            'activated', 'deactivated', 'errorCaptured'].includes(prop)
-          ) && typeof vmBody[prop] === 'function') {
-          vmContent.lifeCycle[prop] = vmBody[prop]
+            'activated', 'deactivated', 'errorCaptured'].includes(prop) &&
+          typeof vmBody[prop] === 'function'
+        ) {
+          vmContent.hooks[prop] = vmBody[prop]
         }
       }
 
@@ -85,7 +92,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         watch: Object.keys(vmContent.watch),
         methods: Object.keys(vmContent.methods),
         filters: Object.keys(vmContent.filters),
-        lifeCycle: Object.keys(vmContent.lifeCycle),
+        hooks: Object.keys(vmContent.hooks),
         import: () => Object.keys(vmContent.import),
         use: () => Object.keys(vmContent.use)
       }
@@ -100,7 +107,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         data: '',
         computed: '',
         watch: '',
-        lifeCycle: '',
+        hooks: '',
         methods: '',
         filters: ''
       }
@@ -108,226 +115,275 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
       // vm set content methods init
       const vmSetContentMethods: any = {
         porps(): void {
-          if (vmContent.props instanceof Array) {
-            const propsContentStr: string = utilMethods.getPropsStr(vmContent.props)
+          if (
+            vmKeys.props.length > 0 &&
+            vmContent.props !== null &&
+            typeof vmContent.props === 'object'
+          ) {
+            const propsContentStr: string = utilMethods.getContentStr(vmContent.props, {
+              arrowFunction: true
+            })
             vmOutput.props = `const props = defineProps(${propsContentStr})`
-          } else if (typeof vmContent.props === 'object' && vmContent.props !== null) {
-            for (const prop in vmContent.props) {
-              const propsContent: any = vmContent.props[prop]
-              const propsContentStr: string = utilMethods.getPropsStr(propsContent)
-              vmOutput.props = vmOutput.props.concat(`${prop}: ${propsContentStr},\n`)
-            }
-            if (vmKeys.props.length > 0) {
-              vmOutput.props = `const props = defineProps({\n${vmOutput.props.substring(0, vmOutput.props.length - 2)}\n})`
-            }
           }
         },
         data(): void {
-          const dataFunctionStr: { body: string } = utilMethods.getFunctionStr(vmBody.data, { useData: true })
-          const dataContentStr: string = dataFunctionStr.body.substring(dataFunctionStr.body.indexOf('return {') + 9, dataFunctionStr.body.length - 7)
-          if (vmKeys.data.length > 0) {
-            vmOutput.data = `const data = reactive({\n${dataContentStr.substring(0, dataContentStr.length)}\n})`
+          if (
+            vmKeys.data.length > 0 &&
+            vmContent.dataOptions !== null &&
+            typeof vmContent.dataOptions === 'object'
+          ) {
+            let dataContentStr: string = utilMethods.getContentStr(vmContent.data)
+            dataContentStr = dataContentStr.substring(dataContentStr.indexOf('return {\n') + 7, dataContentStr.length - 1)
+            vmOutput.data = `const data = reactive(${dataContentStr})`
             utilMethods.addImport('vue', 'reactive')
           }
         },
         computed(): void {
-          for (const prop in vmContent.computed) {
-            const computedContent: any = vmContent.computed[prop]
-            if (typeof computedContent === 'function') {
-              const computedFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(computedContent)
-              vmOutput.computed = vmOutput.computed.concat(
-                `const ${computedContent.name} = computed((${computedFunctionStr.arg}) => ${computedFunctionStr.body})\n\n`
-              )
-            } else if (typeof computedContent === 'object' && computedContent !== null) {
-              let computedContentStr: string = ''
-              let computedGetStr: string = ''
-              let computedSetStr: string = ''
-              if (typeof computedContent.get === 'function') {
-                const computedFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(computedContent.get)
-                computedGetStr = `get: (${computedFunctionStr.arg}) => ${computedFunctionStr.body},\n`
+          if (
+            vmKeys.computed.length > 0 &&
+            vmContent.computed !== null &&
+            typeof vmContent.computed === 'object'
+          ) {
+            const computedValues: string[] = []
+            for (const prop in vmContent.computed) {
+              const computedContent: any = vmContent.computed[prop]
+              if (
+                computedContent !== null &&
+                (typeof computedContent === 'object' || typeof computedContent === 'function')
+              ) {
+                const computedName: string = typeof computedContent === 'function' ? computedContent.name : prop
+                const computedFunctionStr: string = utilMethods.getContentStr(computedContent, {
+                  arrowFunction: true
+                })
+                computedValues.push(`const ${computedName} = computed(${computedFunctionStr})`)
               }
-              if (typeof computedContent.set === 'function') {
-                const computedFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(computedContent.set)
-                computedSetStr = `set: (${computedFunctionStr.arg}) => ${computedFunctionStr.body},\n`
-              }
-              computedContentStr = `${computedGetStr}${computedSetStr}`
-              vmOutput.computed = vmOutput.computed.concat(
-                `const ${prop} = computed({\n${computedContentStr.substring(0, computedContentStr.length - 2)}})\n\n`
-              )
             }
-          }
-          if (vmKeys.computed.length > 0) {
-            vmOutput.computed = vmOutput.computed.substring(0, vmOutput.computed.length - 2)
+            vmOutput.computed = computedValues.join('\n\n')
             utilMethods.addImport('vue', 'computed')
           }
         },
         watch(): void {
-          for (const prop in vmContent.watch) {
-            const watchContent: any = vmContent.watch[prop]
-            if (typeof watchContent === 'function') {
-              const watchFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(watchContent)
-              const watchContentName: string =
-                vmKeys.props.some((key: string) => key === watchContent.name)
-                  ? `props.${watchContent.name}`
-                  : vmKeys.data.some((key: string) => key === watchContent.name)
-                    ? `data.${watchContent.name}`
-                    : vmKeys.computed.some((key: string) => key === watchContent.name)
-                      ? `${watchContent.name}.value`
-                      : prop
-              if (watchContentName) {
-                vmOutput.watch = vmOutput.watch.concat(
-                  `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
+          if (
+            vmKeys.watch.length > 0 &&
+            vmContent.watch !== null &&
+            typeof vmContent.watch === 'object'
+          ) {
+            const watchValues: string[] = []
+            for (const prop in vmContent.watch) {
+              const watchContent: any = vmContent.watch[prop]
+              if (typeof watchContent === 'function') {
+                const watchName: string =
+                  vmKeys.props.some((key: string) => key === watchContent.name)
+                    ? `props.${watchContent.name}`
+                    : vmKeys.data.some((key: string) => key === watchContent.name)
+                      ? `data.${watchContent.name}`
+                      : vmKeys.computed.some((key: string) => key === watchContent.name)
+                        ? `${watchContent.name}.value`
+                        : prop
+                const watchFunctionStr: string = utilMethods.getContentStr(watchContent, {
+                  arrowFunction: true
+                })
+                watchValues.push(`watch(() => ${watchName}, ${watchFunctionStr})`)
+              } else if (
+                watchContent !== null &&
+                typeof watchContent === 'object' &&
+                typeof watchContent.handler === 'function'
+              ) {
+                const watchName: string =
+                  vmKeys.props.some((key: string) => key === prop)
+                    ? `props.${prop}`
+                    : vmKeys.data.some((key: string) => key === prop)
+                      ? `data.${prop}`
+                      : vmKeys.computed.some((key: string) => key === prop)
+                        ? `${vmKeys.computed}.value`
+                        : prop
+                const watchFunctionStr: string = utilMethods.getContentStr(watchContent.handler, {
+                  arrowFunction: true
+                })
+                const watchOptionsStr: string = utilMethods.getContentStr(watchContent, {
+                  excludeProps: ['handler']
+                })
+                watchValues.push(
+                  watchOptionsStr !== '{}'
+                    ? `watch(() => ${watchName}, ${watchFunctionStr}, ${watchOptionsStr})`
+                    : `watch(() => ${watchName}, ${watchFunctionStr}`
                 )
               }
-            } else if (typeof watchContent === 'object' && watchContent !== null && typeof watchContent.handler === 'function') {
-              const watchFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(watchContent.handler)
-              const watchOptionsStr: string = utilMethods.getObjectStr(watchContent, { objExcludeProps: ['handler'] })
-              const watchContentName: string  =
-                vmKeys.props.some((key: string) => key === prop)
-                  ? `props.${prop}`
-                  : vmKeys.data.some((key: string) => key === prop)
-                    ? `data.${prop}`
-                    : vmKeys.computed.some((key: string) => key === prop)
-                      ? `${vmKeys.computed}.value`
-                      : prop
-              if (watchContentName) {
-                vmOutput.watch = watchOptionsStr !== '{}'
-                  ? vmOutput.watch.concat(
-                    `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body}, ${watchOptionsStr})\n\n`
-                  )
-                  : vmOutput.watch.concat(
-                    `watch(() => ${watchContentName}, (${watchFunctionStr.arg}) => ${watchFunctionStr.body})\n\n`
-                  )
-              }
             }
-          }
-          if (vmKeys.watch.length > 0) {
-            vmOutput.watch = vmOutput.watch.substring(0, vmOutput.watch.length - 2)
+            vmOutput.watch = watchValues.join('\n\n')
             utilMethods.addImport('vue', 'watch')
           }
         },
-        lifeCycle(): void {
-          for (const prop in vmContent.lifeCycle) {
-            const lifeCycleContent: any = vmContent.lifeCycle[prop]
-            if (typeof lifeCycleContent === 'function') {
-              const lifeCycleContentName: string = `on${lifeCycleContent.name.substring(0, 1).toUpperCase()}${lifeCycleContent.name.substring(1)}`
-              const lifeCycleFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(lifeCycleContent)
-              if (['beforeCreate', 'created'].includes(lifeCycleContent.name)) {
-                vmOutput.lifeCycle = vmOutput.lifeCycle.concat(
-                  lifeCycleContent.constructor.name === 'AsyncFunction'
-                    ? `async function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
-                    : `function ${lifeCycleContentName} (${lifeCycleFunctionStr.arg})\n${lifeCycleFunctionStr.body}\n${lifeCycleContentName}()\n\n`
-                )
-              } else if (
-                ['beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(lifeCycleContent.name)
-              ) {
-                const v3LifeCycleNameDist: any = {
-                  beforeMount: 'onBeforeMount',
-                  mounted: 'onMounted',
-                  beforeUpdate: 'onBeforeUpdate',
-                  updated: 'onUpdated',
-                  beforeDestroy: 'onBeforeUnmount',
-                  destroyed: 'onUnmounted',
-                  activated: 'onActivated',
-                  deactivated: 'onDeactivated',
-                  errorCaptured: 'onErrorCaptured'
-                }
-                const v3LifeCycleName: string = v3LifeCycleNameDist[lifeCycleContent.name as string]
-                if (v3LifeCycleName) {
-                  vmOutput.lifeCycle = vmOutput.lifeCycle.concat(
-                    lifeCycleContent.constructor.name === 'AsyncFunction'
-                      ? `${v3LifeCycleName} (async(${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
-                      : `${v3LifeCycleName} ((${lifeCycleFunctionStr.arg}) => ${lifeCycleFunctionStr.body})\n\n`
+        hooks(): void {
+          if (
+            vmKeys.hooks.length > 0 &&
+            vmContent.hooks !== null &&
+            typeof vmContent.hooks === 'object'
+          ) {
+            const hookValues: string[] = []
+            for (const prop in vmContent.hooks) {
+              const hookContent: any = vmContent.hooks[prop]
+              if (typeof hookContent === 'function') {
+                if (['beforeCreate', 'created'].includes(hookContent.name)) {
+                  const hookName: string = `on${hookContent.name.substring(0, 1).toUpperCase()}${hookContent.name.substring(1)}`
+                  const hookFunctionStr: string = utilMethods.getContentStr(hookContent)
+                  hookValues.push(
+                    hookContent.constructor.name === 'AsyncFunction'
+                      ? `(async function ${hookName} ${hookFunctionStr})()`
+                      : `(function ${hookName} ${hookFunctionStr}()`
                   )
-                  utilMethods.addImport('vue', v3LifeCycleName)
+                } else if ([
+                  'beforeMount', 'mounted', 'beforeUpdate', 'updated',
+                  'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(hookContent.name)
+                ) {
+                  const v3HooksNameDist: any = {
+                    beforeMount: 'onBeforeMount',
+                    mounted: 'onMounted',
+                    beforeUpdate: 'onBeforeUpdate',
+                    updated: 'onUpdated',
+                    beforeDestroy: 'onBeforeUnmount',
+                    destroyed: 'onUnmounted',
+                    activated: 'onActivated',
+                    deactivated: 'onDeactivated',
+                    errorCaptured: 'onErrorCaptured'
+                  }
+                  const hookName: string = v3HooksNameDist[hookContent.name as string]
+                  const hookFunctionStr: string = utilMethods.getContentStr(hookContent, {
+                    arrowFunction: true
+                  })
+                  hookValues.push(
+                    hookContent.constructor.name === 'AsyncFunction'
+                      ? `${hookName} (async ${hookFunctionStr})`
+                      : `${hookName} (${hookFunctionStr})`
+                  )
+                  utilMethods.addImport('vue', hookName)
                 }
               }
             }
-          }
-          if (vmKeys.lifeCycle.length > 0) {
-            vmOutput.lifeCycle = vmOutput.lifeCycle.substring(0, vmOutput.lifeCycle.length - 2)
+            vmOutput.hooks = hookValues.join('\n\n')
           }
         },
         methods(): void {
-          for (const prop in vmContent.methods) {
-            const methodsContent: any = vmContent.methods[prop]
-            if (typeof methodsContent === 'function') {
-              const methodsFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(methodsContent)
-              vmOutput.methods = vmOutput.methods.concat(
-                methodsContent.constructor.name === 'AsyncFunction'
-                  ? `async function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
-                  : `function ${methodsContent.name} (${methodsFunctionStr.arg})\n${methodsFunctionStr.body}\n\n`
-              )
+          if (
+            vmKeys.methods.length > 0 &&
+            vmContent.methods !== null &&
+            typeof vmContent.methods === 'object'
+          ) {
+            const methodValues: string[] = []
+            for (const prop in vmContent.methods) {
+              const methodContent: any = vmContent.methods[prop]
+              if (typeof methodContent === 'function') {
+                const methodName = methodContent.name
+                const methodFunctionStr: string = utilMethods.getContentStr(methodContent)
+                methodValues.push(
+                  methodContent.constructor.name === 'AsyncFunction'
+                    ? `async function ${methodName} ${methodFunctionStr}`
+                    : `function ${methodName} ${methodFunctionStr}`
+                )
+              }
             }
-          }
-          if (vmKeys.methods.length > 0) {
-            vmOutput.methods = vmOutput.methods.substring(0, vmOutput.methods.length - 2)
+            vmOutput.methods = methodValues.join('\n\n')
           }
         },
         filters(): void {
-          for (const prop in vmContent.filters) {
-            const filtersContent: any = vmContent.filters[prop]
-            if (typeof filtersContent === 'function') {
-              const filtersFunctionStr: { arg: string, body: string } = utilMethods.getFunctionStr(filtersContent)
-              vmOutput.filters = vmOutput.filters.concat(
-                `function ${filtersContent.name} (${filtersFunctionStr.arg})\n${filtersFunctionStr.body}\n\n`
-              )
+          if (
+            vmKeys.filters.length > 0 &&
+            vmContent.filters !== null &&
+            typeof vmContent.filters === 'object'
+          ) {
+            const filtetValues: string[] = []
+            for (const prop in vmContent.filters) {
+              const filterContent: any = vmContent.filters[prop]
+              if (typeof filterContent === 'function') {
+                const filterName: string = filterContent.name
+                const filterFunctionStr: string = utilMethods.getContentStr(filterContent)
+                filtetValues.push(`function ${filterName} ${filterFunctionStr}`)
+              }
             }
-          }
-          if (vmKeys.filters.length > 0) {
-            vmOutput.filters = vmOutput.filters.substring(0, vmOutput.filters.length - 2)
+            vmOutput.filters = filtetValues.join('\n\n')
           }
         },
         import(): void {
-          for (const prop in vmContent.import) {
-            const importContent: string[] = vmContent.import[prop]
-            if (importContent.length > 0) {
-              vmOutput.import = vmOutput.import.concat(`import { ${importContent.join(', ')} } from '${prop}'\n`)
+          if (
+            vmKeys.import().length > 0 &&
+            vmContent.import !== null &&
+            typeof vmContent.import === 'object'
+          ) {
+            const importValues: string[] = []
+            for (const prop in vmContent.import) {
+              const importContent: string[] = vmContent.import[prop]
+              if (
+                importContent instanceof Array &&
+                importContent.length > 0
+              ) {
+                importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
+              }
             }
-          }
-          if (vmKeys.import().length > 0) {
-            vmOutput.import = vmOutput.import.substring(0, vmOutput.import.length - 1)
+            vmOutput.import = importValues.join('\n')
           }
         },
         use(): void {
-          for (const prop in vmContent.use) {
-            const useContent: string = vmContent.use[prop]
-            vmOutput.use = vmOutput.use.concat(`${useContent}\n`)
-          }
-          if (vmKeys.use().length > 0) {
-            vmOutput.use = vmOutput.use.substring(0, vmOutput.use.length - 1)
+          if (
+            vmKeys.use().length > 0 &&
+            vmContent.use !== null &&
+            typeof vmContent.use === 'object'
+          ) {
+            const useValues: string[] = []
+            for (const prop in vmContent.use) {
+              const useContent: string = vmContent.use[prop]
+              if (useContent) {
+                useValues.push(useContent)
+              }
+            }
+            vmOutput.use = useValues.join('\n')
           }
         },
         emits(): void {
-          for (const emits of vmContent.emits) {
-            const emitsContent: string = emits.split('update:').pop()
-            vmOutput.emits = vmOutput.emits.concat(`'${emitsContent}', `)
-          }
-          if (vmContent.emits.length > 0) {
-            vmOutput.emits = `const emit = defineEmits([${vmOutput.emits.substring(0, vmOutput.emits.length - 2)}])`
+          if (
+            vmContent.emits instanceof Array &&
+            vmContent.emits.length > 0
+          ) {
+            const emitValues: string[] = []
+            for (const emits of vmContent.emits) {
+              const emitContent: string = emits.split('update:').pop()
+              if (emitContent) {
+                emitValues.push(`\'${emitContent}\'`)
+              }
+            }
+            vmOutput.emits = `const emit = defineEmits([${emitValues.join(', ')}])`
           }
         },
         refs(): void {
-          for (const refs of vmContent.refs) {
-            vmOutput.refs = vmOutput.refs.concat(`const ${refs} = ref(null)\n`)
-          }
-          if (vmContent.refs.length > 0) {
-            vmOutput.refs = vmOutput.refs.substring(0, vmOutput.refs.length - 1)
+          if (
+            vmContent.refs instanceof Array &&
+            vmContent.refs.length > 0
+          ) {
+            const refValues: string[] = []
+            for (const ref of vmContent.refs) {
+              if (ref) {
+                refValues.push(`const ${ref} = ref(null)`)
+              }
+            }
+            vmOutput.refs = refValues.join('\n')
           }
         },
         output(): void {
+          const outputValues: string[] = []
           for (const prop in vmOutput) {
-            const vmOutputContent: string = vmOutput[prop]
-            if (vmOutputContent) {
-              outputSrciptContent = outputSrciptContent.concat(`${vmOutputContent}\n\n`)
+            const outputContent: string = vmOutput[prop]
+            if (outputContent) {
+              outputValues.push(outputContent)
             }
           }
+          outputSrciptContent = outputValues.join('\n\n')
         }
       }
 
       // util methods init
       const utilMethods = {
-        getIndexArr({ values = [], content = '', start = 0, append = false }: { values: string[], content: string, start: number, append: boolean }): number[] {
+        getIndexArr(
+          { values = [], content = '', start = 0, append = false }: { values: string[], content: string, start: number, append: boolean }
+        ): number[] {
           const result: number[] = []
           if (values instanceof Array && typeof content === 'string') {
             for (const value of values) {
@@ -339,88 +395,68 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
           }
           return result
         },
-        getObjectStr(value: any, options: { objExcludeProps: string[] } = { objExcludeProps: [] }): string {
+        getContentStr(
+          value: any,
+          options: { arrowFunction?: boolean, excludeProps?: string[] } = { arrowFunction: false, excludeProps: [] }
+        ): string {
           let result: string = ''
-          if (typeof value === 'function') {
-            result = utilMethods.getFunctionStr(value).main
-          } else if (value instanceof Array) {
-            for (const item of value) {
-              result = result.concat(`${utilMethods.getObjectStr(item)}, `)
+          if (typeof value === 'string') {
+            result = `\'${value}\'`
+          } else if (typeof value === 'function') {
+            let content: string = value.toString()
+            if (content.includes('[native code]')) {
+              result = `${value.name}`
+            } else {
+              content = utilMethods.replaceKey(content)
+              const arg: string = content.substring(
+                content.indexOf('(') + 1,
+                Math.min(
+                  ...utilMethods.getIndexArr({
+                    values: [') {', ') =>'],
+                    content,
+                    start: 0,
+                    append: false
+                  })
+                )
+              )
+              const body: string = content.substring(
+                Math.min(
+                  ...utilMethods.getIndexArr({
+                    values: [') {', '=> {', '=> ('],
+                    content,
+                    start: 0,
+                    append: true
+                  })
+                ) - 1,
+                content.length
+              )
+              result = options.arrowFunction ? `(${arg}) => ${body}` : `(${arg}) ${body}`
             }
-            result = `[${result.substring(0, result.length - 2)}]`
+          } else if (value instanceof Array) {
+            const values: string[] = []
+            for (const item of value) {
+              const content: string = utilMethods.getContentStr(item, options)
+              values.push(content)
+            }
+            result = values.length > 0 ? `[${values.join(', ')}]` : '[]'
           } else if (typeof value === 'object' && value !== null) {
-            const valueKeys: string[] = []
+            const values: string[] = []
             for (const prop in value) {
-              if (!options.objExcludeProps.includes(prop)) {
-                result = result.concat(`${prop}: ${utilMethods.getObjectStr(value[prop])},\n`)
-                valueKeys.push(prop)
+              if (!options.excludeProps?.includes(prop)) {
+                const content: string = utilMethods.getContentStr(value[prop], options)
+                values.push(`${prop}: ${content}`)
               }
             }
-            result = valueKeys.length > 0 ? `{\n${result.substring(0, result.length - 2)}\n}` : '{}'
-          } else if (typeof value === 'string') {
-            result = `'${value}'`
+            result = values.length > 0 ? `{\n${values.join(',\n')}\n}` : '{}'
           } else {
             result = `${value}`
           }
           return result
         },
-        getFunctionStr(value: any, options: any = {}): { main: string, arg: string, body: string } {
-          let result: any = {}
-          let mainStr: string = ''
-          let argStr: string = ''
-          let bodyStr: string = ''
-          if (typeof value === 'function') {
-            mainStr = utilMethods.replaceKey(value.toString(), options)
-            argStr = mainStr.substring(
-              mainStr.indexOf('(') + 1,
-              Math.min(
-                ...utilMethods.getIndexArr({
-                  values: [') {', ') =>'],
-                  content: mainStr,
-                  start: 0,
-                  append: false
-                })
-              )
-            )
-            bodyStr = mainStr.substring(
-              Math.min(
-                ...utilMethods.getIndexArr({
-                  values: [') {', '=> {'],
-                  content: mainStr,
-                  start: 0,
-                  append: true
-                })
-              ) - 1,
-              mainStr.length
-            )
-          }
-          result = { main: mainStr, arg: argStr, body: bodyStr }
-          return result
-        },
-        getPropsStr(value: any, options: { functionToString: boolean } = { functionToString: false }): string {
-          let result: string = ''
-          if (typeof value === 'function' && !options.functionToString) {
-            result = `${value.name}`
-          } else if (value instanceof Array) {
-            for (const item of value) {
-              result = result.concat(`${utilMethods.getPropsStr(item)}, `)
-            }
-            result = `[${result.substring(0, result.length - 2)}]`
-          } else if (typeof value === 'object' && value !== null) {
-            for (const prop in value) {
-              result = result.concat(`${prop}: ${utilMethods.getPropsStr(value[prop], {
-                functionToString: ['default', 'validator'].includes(prop)
-              })},\n`)
-            }
-            result = Object.keys(value).length > 0 ? `{\n${result.substring(0, result.length - 2)}\n}` : '{}'
-          } else if (typeof value === 'string') {
-            result = `'${value}'`
-          } else {
-            result = `${value}`
-          }
-          return result
-        },
-        replaceKey(value: string, options: { useData: boolean } = { useData: false }): string {
+        replaceKey(
+          value: string,
+          options: { useData: boolean } = { useData: false }
+        ): string {
           let result: string = ''
           if (typeof value === 'string') {
             const contentArr: string[] = value.split('this.')
@@ -449,7 +485,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
                   contentArr[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
                   contentArr[i] = content
-                } else if ([  
+                } else if ([
                   '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
                   '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
                 ) {
@@ -548,7 +584,7 @@ function Vue2ToCompositionApi(entrySrciptContent: string = '', options: { isDebu
         addImport(type: string, value: string): void {
           if (
             typeof type === 'string' &&
-            typeof value === 'string' && 
+            typeof value === 'string' &&
             ['vue', 'vue-router', 'vuex'].includes(type)
           ) {
             const importContent: string[] = vmContent.import[type]
