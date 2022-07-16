@@ -5,12 +5,18 @@
 */
 
 declare global {
-  interface Window { Vue2ToCompositionApiVmBody: any }
+  interface Window {
+    Vue2ToCompositionApiVmBody: any
+  }
 }
 
 function Vue2ToCompositionApi(
   entrySrciptContent: string = '',
-  options: { isDebug: boolean } = { isDebug: false }
+  options: {
+    isDebug?: boolean
+  } = {
+    isDebug: false
+  }
 ): any {
   if (
     typeof entrySrciptContent === 'string' &&
@@ -132,7 +138,9 @@ function Vue2ToCompositionApi(
             vmContent.dataOptions !== null &&
             typeof vmContent.dataOptions === 'object'
           ) {
-            let dataContentStr: string = utilMethods.getContentStr(vmContent.data)
+            let dataContentStr: string = utilMethods.getContentStr(vmContent.data, {
+              replaceDataKeyToUseData: true
+            })
             dataContentStr = dataContentStr.substring(dataContentStr.indexOf('return {\n') + 7, dataContentStr.length - 1)
             vmOutput.data = `const data = reactive(${dataContentStr})`
             utilMethods.addImport('vue', 'reactive')
@@ -172,14 +180,7 @@ function Vue2ToCompositionApi(
             for (const prop in vmContent.watch) {
               const watchContent: any = vmContent.watch[prop]
               if (typeof watchContent === 'function') {
-                const watchName: string =
-                  vmKeys.props.some((key: string) => key === watchContent.name)
-                    ? `props.${watchContent.name}`
-                    : vmKeys.data.some((key: string) => key === watchContent.name)
-                      ? `data.${watchContent.name}`
-                      : vmKeys.computed.some((key: string) => key === watchContent.name)
-                        ? `${watchContent.name}.value`
-                        : prop
+                const watchName: string = utilMethods.replaceKey(watchContent.name)
                 const watchFunctionStr: string = utilMethods.getContentStr(watchContent, {
                   arrowFunction: true
                 })
@@ -189,14 +190,7 @@ function Vue2ToCompositionApi(
                 typeof watchContent === 'object' &&
                 typeof watchContent.handler === 'function'
               ) {
-                const watchName: string =
-                  vmKeys.props.some((key: string) => key === prop)
-                    ? `props.${prop}`
-                    : vmKeys.data.some((key: string) => key === prop)
-                      ? `data.${prop}`
-                      : vmKeys.computed.some((key: string) => key === prop)
-                        ? `${vmKeys.computed}.value`
-                        : prop
+                const watchName: string = utilMethods.replaceKey(prop)
                 const watchFunctionStr: string = utilMethods.getContentStr(watchContent.handler, {
                   arrowFunction: true
                 })
@@ -230,7 +224,7 @@ function Vue2ToCompositionApi(
                   hookValues.push(
                     hookContent.constructor.name === 'AsyncFunction'
                       ? `(async function ${hookName} ${hookFunctionStr})()`
-                      : `(function ${hookName} ${hookFunctionStr}()`
+                      : `(function ${hookName} ${hookFunctionStr})()`
                   )
                 } else if ([
                   'beforeMount', 'mounted', 'beforeUpdate', 'updated',
@@ -273,7 +267,7 @@ function Vue2ToCompositionApi(
             for (const prop in vmContent.methods) {
               const methodContent: any = vmContent.methods[prop]
               if (typeof methodContent === 'function') {
-                const methodName = methodContent.name
+                const methodName: string = methodContent.name
                 const methodFunctionStr: string = utilMethods.getContentStr(methodContent)
                 methodValues.push(
                   methodContent.constructor.name === 'AsyncFunction'
@@ -382,7 +376,17 @@ function Vue2ToCompositionApi(
       // util methods init
       const utilMethods = {
         getIndexArr(
-          { values = [], content = '', start = 0, append = false }: { values: string[], content: string, start: number, append: boolean }
+          {
+            values = [],
+            content = '',
+            start = 0,
+            append = false
+          }: {
+            values: string[],
+            content: string,
+            start: number,
+            append: boolean
+          }
         ): number[] {
           const result: number[] = []
           if (values instanceof Array && typeof content === 'string') {
@@ -397,7 +401,15 @@ function Vue2ToCompositionApi(
         },
         getContentStr(
           value: any,
-          options: { arrowFunction?: boolean, excludeProps?: string[] } = { arrowFunction: false, excludeProps: [] }
+          options: {
+            arrowFunction?: boolean,
+            excludeProps?: string[],
+            replaceDataKeyToUseData?: boolean
+          } = {
+            arrowFunction: false,
+            excludeProps: [],
+            replaceDataKeyToUseData: false
+          }
         ): string {
           let result: string = ''
           if (typeof value === 'string') {
@@ -407,7 +419,10 @@ function Vue2ToCompositionApi(
             if (content.includes('[native code]')) {
               result = `${value.name}`
             } else {
-              content = utilMethods.replaceKey(content)
+              content = utilMethods.replaceKey(content, {
+                separator: 'this.',
+                dataKeyToUseData: options.replaceDataKeyToUseData
+              })
               const arg: string = content.substring(
                 content.indexOf('(') + 1,
                 Math.min(
@@ -455,14 +470,20 @@ function Vue2ToCompositionApi(
         },
         replaceKey(
           value: string,
-          options: { useData: boolean } = { useData: false }
+          options: {
+            separator?: string | undefined,
+            dataKeyToUseData?: boolean
+          } = {
+            separator: undefined,
+            dataKeyToUseData: false
+          }
         ): string {
           let result: string = ''
           if (typeof value === 'string') {
-            const contentArr: string[] = value.split('this.')
-            if (contentArr.length > 0) {
-              for (let i = 0; i < contentArr.length; i++) {
-                const content: string = contentArr[i]
+            const contents: string[] = options.separator ? value.split(options.separator) : [value]
+            if (contents.length > 0) {
+              for (let i = 0; i < contents.length; i++) {
+                const content: string = contents[i]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
                     values: ['\n', '\t', ' ', '.', ',', '?', '[', ']', ')', '(', '+', '-'],
@@ -471,31 +492,31 @@ function Vue2ToCompositionApi(
                     append: false
                   })
                 ))
-                const reset = () => {
-                  contentArr[i] = content.replace(key, `this.${key}`)
+                const reset: any = (): void => {
+                  contents[i] = content.replace(key, `this.${key}`)
                 }
                 if (vmKeys.props.includes(key)) {
-                  contentArr[i] = content.replace(key, `props.${key}`)
-                } else if (vmKeys.data.includes(key) && options.useData) {
-                  contentArr[i] = content.replace(key, `useData().${key}`)
+                  contents[i] = content.replace(key, `props.${key}`)
+                } else if (vmKeys.data.includes(key) && options.dataKeyToUseData) {
+                  contents[i] = content.replace(key, `useData().${key}`)
                   utilMethods.addUse('data')
                 } else if (vmKeys.data.includes(key)) {
-                  contentArr[i] = content.replace(key, `data.${key}`)
+                  contents[i] = content.replace(key, `data.${key}`)
                 } else if (vmKeys.computed.includes(key)) {
-                  contentArr[i] = content.replace(key, `${key}.value`)
+                  contents[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
-                  contentArr[i] = content
+                  contents[i] = content
                 } else if ([
                   '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
                   '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
                 ) {
-                  contentArr[i] = content.replace(key, `$vm.proxy.${key}`)
+                  contents[i] = content.replace(key, `$vm.proxy.${key}`)
                   utilMethods.addImport('vue', 'getCurrentInstance')
                   utilMethods.addUse('vm')
                 } else if ([
                   '$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)
                 ) {
-                  contentArr[i] = content.replace('$', '')
+                  contents[i] = content.replace('$', '')
                   if (key === '$attrs') {
                     utilMethods.addImport('vue', 'useAttrs')
                     utilMethods.addUse('attrs')
@@ -516,7 +537,7 @@ function Vue2ToCompositionApi(
                   } else if (key === '$set') {
                     utilMethods.addImport('vue', 'set')
                   } else if (key === '$delete') {
-                    contentArr[i] = contentArr[i].replace('delete', 'del')
+                    contents[i] = contents[i].replace('delete', 'del')
                     utilMethods.addImport('vue', 'del')
                   }
                 } else if (key === '$emit') {
@@ -541,7 +562,7 @@ function Vue2ToCompositionApi(
                     if (!vmContent.emits.includes(emitName)) {
                       vmContent.emits.push(emitName)
                     }
-                    contentArr[i] = content.replace('$', '')
+                    contents[i] = content.replace('$', '')
                   } else {
                     reset()
                   }
@@ -567,7 +588,7 @@ function Vue2ToCompositionApi(
                     if (!vmContent.refs.includes(refsName)) {
                       vmContent.refs.push(refsName)
                     }
-                    contentArr[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
+                    contents[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
                     utilMethods.addImport('vue', 'ref')
                   } else {
                     reset()
@@ -577,7 +598,7 @@ function Vue2ToCompositionApi(
                 }
               }
             }
-            result = contentArr.join('')
+            result = contents.join('')
           }
           return result
         },
