@@ -20,7 +20,8 @@ function Vue2ToCompositionApi(
 ): any {
   if (
     typeof entrySrciptContent === 'string' &&
-    typeof options === 'object'
+    typeof options === 'object' &&
+    Object.keys(options).length > 0
   ) {
     try {
       // output srcipt content init
@@ -129,7 +130,9 @@ function Vue2ToCompositionApi(
             const propsContentStr: string = utilMethods.getContentStr(vmContent.props, {
               arrowFunction: true
             })
-            vmOutput.props = `const props = defineProps(${propsContentStr})`
+            if (propsContentStr) {
+              vmOutput.props = `const props = defineProps(${propsContentStr})`
+            }
           }
         },
         data(): void {
@@ -138,12 +141,14 @@ function Vue2ToCompositionApi(
             vmContent.dataOptions !== null &&
             typeof vmContent.dataOptions === 'object'
           ) {
-            let dataContentStr: string = utilMethods.getContentStr(vmContent.data, {
+            const dataFunctionStr: string = utilMethods.getContentStr(vmContent.data, {
               replaceDataKeyToUseData: true
             })
-            dataContentStr = dataContentStr.substring(dataContentStr.indexOf('return {\n') + 7, dataContentStr.length - 1)
-            vmOutput.data = `const data = reactive(${dataContentStr})`
-            utilMethods.addImport('vue', 'reactive')
+            if (dataFunctionStr) {
+              const dataContentStr: string = dataFunctionStr.substring(dataFunctionStr.indexOf('return {\n') + 7, dataFunctionStr.length - 1)
+              vmOutput.data = `const data = reactive(${dataContentStr})`
+              utilMethods.addImport('vue', 'reactive')
+            }
           }
         },
         computed(): void {
@@ -163,11 +168,15 @@ function Vue2ToCompositionApi(
                 const computedFunctionStr: string = utilMethods.getContentStr(computedContent, {
                   arrowFunction: true
                 })
-                computedValues.push(`const ${computedName} = computed(${computedFunctionStr})`)
+                if (computedName && computedFunctionStr) {
+                  computedValues.push(`const ${computedName} = computed(${computedFunctionStr})`)
+                }
               }
             }
-            vmOutput.computed = computedValues.join('\n\n')
-            utilMethods.addImport('vue', 'computed')
+            if (computedValues.length > 0) {
+              vmOutput.computed = computedValues.join('\n\n')
+              utilMethods.addImport('vue', 'computed')
+            }
           }
         },
         watch(): void {
@@ -184,7 +193,9 @@ function Vue2ToCompositionApi(
                 const watchFunctionStr: string = utilMethods.getContentStr(watchContent, {
                   arrowFunction: true
                 })
-                watchValues.push(`watch(() => ${watchName}, ${watchFunctionStr})`)
+                if (watchName && watchFunctionStr) {
+                  watchValues.push(`watch(() => ${watchName}, ${watchFunctionStr})`)
+                }
               } else if (
                 watchContent !== null &&
                 typeof watchContent === 'object' &&
@@ -197,15 +208,19 @@ function Vue2ToCompositionApi(
                 const watchOptionsStr: string = utilMethods.getContentStr(watchContent, {
                   excludeProps: ['handler']
                 })
-                watchValues.push(
-                  watchOptionsStr !== '{}'
-                    ? `watch(() => ${watchName}, ${watchFunctionStr}, ${watchOptionsStr})`
-                    : `watch(() => ${watchName}, ${watchFunctionStr}`
-                )
+                if (watchName && watchFunctionStr && watchOptionsStr) {
+                  watchValues.push(
+                    watchOptionsStr !== '{}'
+                      ? `watch(() => ${watchName}, ${watchFunctionStr}, ${watchOptionsStr})`
+                      : `watch(() => ${watchName}, ${watchFunctionStr})`
+                  )
+                }
               }
             }
-            vmOutput.watch = watchValues.join('\n\n')
-            utilMethods.addImport('vue', 'watch')
+            if (watchValues.length > 0) {
+              vmOutput.watch = watchValues.join('\n\n')
+              utilMethods.addImport('vue', 'watch')
+            }
           }
         },
         hooks(): void {
@@ -221,11 +236,13 @@ function Vue2ToCompositionApi(
                 if (['beforeCreate', 'created'].includes(hookContent.name)) {
                   const hookName: string = `on${hookContent.name.substring(0, 1).toUpperCase()}${hookContent.name.substring(1)}`
                   const hookFunctionStr: string = utilMethods.getContentStr(hookContent)
-                  hookValues.push(
-                    hookContent.constructor.name === 'AsyncFunction'
-                      ? `(async function ${hookName} ${hookFunctionStr})()`
-                      : `(function ${hookName} ${hookFunctionStr})()`
-                  )
+                  if (hookName && hookFunctionStr) {
+                    hookValues.push(
+                      hookContent.constructor.name === 'AsyncFunction'
+                        ? `(async function ${hookName} ${hookFunctionStr})()`
+                        : `(function ${hookName} ${hookFunctionStr})()`
+                    )
+                  }
                 } else if ([
                   'beforeMount', 'mounted', 'beforeUpdate', 'updated',
                   'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(hookContent.name)
@@ -245,16 +262,20 @@ function Vue2ToCompositionApi(
                   const hookFunctionStr: string = utilMethods.getContentStr(hookContent, {
                     arrowFunction: true
                   })
-                  hookValues.push(
-                    hookContent.constructor.name === 'AsyncFunction'
-                      ? `${hookName} (async ${hookFunctionStr})`
-                      : `${hookName} (${hookFunctionStr})`
-                  )
-                  utilMethods.addImport('vue', hookName)
+                  if (hookName && hookFunctionStr) {
+                    hookValues.push(
+                      hookContent.constructor.name === 'AsyncFunction'
+                        ? `${hookName} (async ${hookFunctionStr})`
+                        : `${hookName} (${hookFunctionStr})`
+                    )
+                    utilMethods.addImport('vue', hookName)
+                  }
                 }
               }
             }
-            vmOutput.hooks = hookValues.join('\n\n')
+            if (hookValues.length > 0) {
+              vmOutput.hooks = hookValues.join('\n\n')
+            }
           }
         },
         methods(): void {
@@ -269,14 +290,18 @@ function Vue2ToCompositionApi(
               if (typeof methodContent === 'function') {
                 const methodName: string = methodContent.name
                 const methodFunctionStr: string = utilMethods.getContentStr(methodContent)
-                methodValues.push(
-                  methodContent.constructor.name === 'AsyncFunction'
-                    ? `async function ${methodName} ${methodFunctionStr}`
-                    : `function ${methodName} ${methodFunctionStr}`
-                )
+                if (methodName && methodFunctionStr) {
+                  methodValues.push(
+                    methodContent.constructor.name === 'AsyncFunction'
+                      ? `async function ${methodName} ${methodFunctionStr}`
+                      : `function ${methodName} ${methodFunctionStr}`
+                  )
+                }
               }
             }
-            vmOutput.methods = methodValues.join('\n\n')
+            if (methodValues.length > 0) {
+              vmOutput.methods = methodValues.join('\n\n')
+            }
           }
         },
         filters(): void {
@@ -285,16 +310,20 @@ function Vue2ToCompositionApi(
             vmContent.filters !== null &&
             typeof vmContent.filters === 'object'
           ) {
-            const filtetValues: string[] = []
+            const filterValues: string[] = []
             for (const prop in vmContent.filters) {
               const filterContent: any = vmContent.filters[prop]
               if (typeof filterContent === 'function') {
                 const filterName: string = filterContent.name
                 const filterFunctionStr: string = utilMethods.getContentStr(filterContent)
-                filtetValues.push(`function ${filterName} ${filterFunctionStr}`)
+                if (filterName && filterFunctionStr) {
+                  filterValues.push(`function ${filterName} ${filterFunctionStr}`)
+                }
               }
             }
-            vmOutput.filters = filtetValues.join('\n\n')
+            if (filterValues.length > 0) {
+              vmOutput.filters = filterValues.join('\n\n')
+            }
           }
         },
         import(): void {
@@ -306,14 +335,13 @@ function Vue2ToCompositionApi(
             const importValues: string[] = []
             for (const prop in vmContent.import) {
               const importContent: string[] = vmContent.import[prop]
-              if (
-                importContent instanceof Array &&
-                importContent.length > 0
-              ) {
+              if (importContent.length > 0) {
                 importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
               }
             }
-            vmOutput.import = importValues.join('\n')
+            if (importValues.length > 0) {
+              vmOutput.import = importValues.join('\n')
+            }
           }
         },
         use(): void {
@@ -329,7 +357,9 @@ function Vue2ToCompositionApi(
                 useValues.push(useContent)
               }
             }
-            vmOutput.use = useValues.join('\n')
+            if (useValues.length > 0) {
+              vmOutput.use = useValues.join('\n')
+            }
           }
         },
         emits(): void {
@@ -344,7 +374,9 @@ function Vue2ToCompositionApi(
                 emitValues.push(`\'${emitContent}\'`)
               }
             }
-            vmOutput.emits = `const emit = defineEmits([${emitValues.join(', ')}])`
+            if (emitValues.length) {
+              vmOutput.emits = `const emit = defineEmits([${emitValues.join(', ')}])`
+            }
           }
         },
         refs(): void {
@@ -358,7 +390,10 @@ function Vue2ToCompositionApi(
                 refValues.push(`const ${ref} = ref(null)`)
               }
             }
-            vmOutput.refs = refValues.join('\n')
+            if (refValues.length > 0) {
+              vmOutput.refs = refValues.join('\n')
+              utilMethods.addImport('vue', 'ref')
+            }
           }
         },
         output(): void {
@@ -369,12 +404,14 @@ function Vue2ToCompositionApi(
               outputValues.push(outputContent)
             }
           }
-          outputSrciptContent = outputValues.join('\n\n')
+          if (outputValues.length > 0) {
+            outputSrciptContent = outputValues.join('\n\n')
+          }
         }
       }
 
       // util methods init
-      const utilMethods = {
+      const utilMethods: any = {
         getIndexArr(
           {
             values = [],
@@ -389,7 +426,12 @@ function Vue2ToCompositionApi(
           }
         ): number[] {
           const result: number[] = []
-          if (values instanceof Array && typeof content === 'string') {
+          if (
+            values instanceof Array &&
+            typeof content === 'string' &&
+            typeof start === 'number' &&
+            typeof append === 'boolean'
+          ) {
             for (const value of values) {
               const valueIndex: number = content.indexOf(value, start)
               if (valueIndex !== -1) {
@@ -412,59 +454,64 @@ function Vue2ToCompositionApi(
           }
         ): string {
           let result: string = ''
-          if (typeof value === 'string') {
-            result = `\'${value}\'`
-          } else if (typeof value === 'function') {
-            let content: string = value.toString()
-            if (content.includes('[native code]')) {
-              result = `${value.name}`
-            } else {
-              content = utilMethods.replaceKey(content, {
-                separator: 'this.',
-                dataKeyToUseData: options.replaceDataKeyToUseData
-              })
-              const arg: string = content.substring(
-                content.indexOf('(') + 1,
-                Math.min(
-                  ...utilMethods.getIndexArr({
-                    values: [') {', ') =>'],
-                    content,
-                    start: 0,
-                    append: false
-                  })
+          if (
+            typeof options === 'object' &&
+            Object.keys(options).length > 0
+          ) {
+            if (typeof value === 'string') {
+              result = `\'${value}\'`
+            } else if (typeof value === 'function') {
+              let content: string = value.toString()
+              if (content.includes('[native code]')) {
+                result = `${value.name}`
+              } else {
+                content = utilMethods.replaceKey(content, {
+                  separator: 'this.',
+                  dataKeyToUseData: options.replaceDataKeyToUseData
+                })
+                const arg: string = content.substring(
+                  content.indexOf('(') + 1,
+                  Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: [') {', ') =>'],
+                      content,
+                      start: 0,
+                      append: false
+                    })
+                  )
                 )
-              )
-              const body: string = content.substring(
-                Math.min(
-                  ...utilMethods.getIndexArr({
-                    values: [') {', '=> {', '=> ('],
-                    content,
-                    start: 0,
-                    append: true
-                  })
-                ) - 1,
-                content.length
-              )
-              result = options.arrowFunction ? `(${arg}) => ${body}` : `(${arg}) ${body}`
-            }
-          } else if (value instanceof Array) {
-            const values: string[] = []
-            for (const item of value) {
-              const content: string = utilMethods.getContentStr(item, options)
-              values.push(content)
-            }
-            result = values.length > 0 ? `[${values.join(', ')}]` : '[]'
-          } else if (typeof value === 'object' && value !== null) {
-            const values: string[] = []
-            for (const prop in value) {
-              if (!options.excludeProps?.includes(prop)) {
-                const content: string = utilMethods.getContentStr(value[prop], options)
-                values.push(`${prop}: ${content}`)
+                const body: string = content.substring(
+                  Math.min(
+                    ...utilMethods.getIndexArr({
+                      values: [') {', '=> {', '=> ('],
+                      content,
+                      start: 0,
+                      append: true
+                    })
+                  ) - 1,
+                  content.length
+                )
+                result = options.arrowFunction ? `(${arg}) => ${body}` : `(${arg}) ${body}`
               }
+            } else if (value instanceof Array) {
+              const values: string[] = []
+              for (const item of value) {
+                const content: string = utilMethods.getContentStr(item, options)
+                values.push(content)
+              }
+              result = values.length > 0 ? `[${values.join(', ')}]` : '[]'
+            } else if (typeof value === 'object' && value !== null) {
+              const values: string[] = []
+              for (const prop in value) {
+                if (!options.excludeProps?.includes(prop)) {
+                  const content: string = utilMethods.getContentStr(value[prop], options)
+                  values.push(`${prop}: ${content}`)
+                }
+              }
+              result = values.length > 0 ? `{\n${values.join(',\n')}\n}` : '{}'
+            } else {
+              result = `${value}`
             }
-            result = values.length > 0 ? `{\n${values.join(',\n')}\n}` : '{}'
-          } else {
-            result = `${value}`
           }
           return result
         },
@@ -479,7 +526,11 @@ function Vue2ToCompositionApi(
           }
         ): string {
           let result: string = ''
-          if (typeof value === 'string') {
+          if (
+            typeof value === 'string' &&
+            typeof options === 'object' &&
+            Object.keys(options).length > 0
+          ) {
             const contents: string[] = options.separator ? value.split(options.separator) : [value]
             if (contents.length > 0) {
               for (let i = 0; i < contents.length; i++) {
@@ -589,7 +640,6 @@ function Vue2ToCompositionApi(
                       vmContent.refs.push(refsName)
                     }
                     contents[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
-                    utilMethods.addImport('vue', 'ref')
                   } else {
                     reset()
                   }
@@ -628,7 +678,10 @@ function Vue2ToCompositionApi(
               route: 'const route = useRoute()',
               store: 'const store = useStore()'
             }
-            vmContent.use[type] = contentDist[type]
+            const useContent: string = contentDist[type]
+            if (useContent) {
+              vmContent.use[type] = useContent
+            }
           }
         }
       }
