@@ -544,7 +544,7 @@ function Vue2ToCompositionApi(
                   })
                 ))
                 const reset: any = (): void => {
-                  contents[i] = content.replace(key, `this.${key}`)
+                  contents[i] = content.replace(key, options.separator ? `${options.separator}${key}` : key)
                 }
                 if (vmKeys.props.includes(key)) {
                   contents[i] = content.replace(key, `props.${key}`)
