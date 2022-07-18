@@ -239,8 +239,8 @@ function Vue2ToCompositionApi(
                   if (hookName && hookFunctionStr) {
                     hookValues.push(
                       hookContent.constructor.name === 'AsyncFunction'
-                        ? `(async function ${hookName} ${hookFunctionStr})()`
-                        : `(function ${hookName} ${hookFunctionStr})()`
+                        ? `async function ${hookName} ${hookFunctionStr}\n${hookName}()`
+                        : `function ${hookName} ${hookFunctionStr}\n${hookName}()`
                     )
                   }
                 } else if ([
