@@ -73,10 +73,10 @@ function Vue2ToCompositionApi(
         methods: vmBody.methods && typeof vmBody.methods === 'object' ? vmBody.methods : {},
         filters: vmBody.filters && typeof vmBody.filters === 'object' ? vmBody.filters : {},
         hooks: {},
-        import: { vue: [], 'vue-router': [], vuex: [] },
-        use: {},
         emits: [],
-        refs: []
+        refs: [],
+        use: {},
+        import: { vue: [], 'vue-router': [], vuex: [] }
       }
 
       // vm hooks content init
@@ -100,8 +100,8 @@ function Vue2ToCompositionApi(
         methods: Object.keys(vmContent.methods),
         filters: Object.keys(vmContent.filters),
         hooks: Object.keys(vmContent.hooks),
-        import: () => Object.keys(vmContent.import),
-        use: () => Object.keys(vmContent.use)
+        use: () => Object.keys(vmContent.use),
+        import: () => Object.keys(vmContent.import)
       }
 
       // vm output init
@@ -326,42 +326,6 @@ function Vue2ToCompositionApi(
             }
           }
         },
-        import(): void {
-          if (
-            vmKeys.import().length > 0 &&
-            vmContent.import !== null &&
-            typeof vmContent.import === 'object'
-          ) {
-            const importValues: string[] = []
-            for (const prop in vmContent.import) {
-              const importContent: string[] = vmContent.import[prop]
-              if (importContent.length > 0) {
-                importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
-              }
-            }
-            if (importValues.length > 0) {
-              vmOutput.import = importValues.join('\n')
-            }
-          }
-        },
-        use(): void {
-          if (
-            vmKeys.use().length > 0 &&
-            vmContent.use !== null &&
-            typeof vmContent.use === 'object'
-          ) {
-            const useValues: string[] = []
-            for (const prop in vmContent.use) {
-              const useContent: string = vmContent.use[prop]
-              if (useContent) {
-                useValues.push(useContent)
-              }
-            }
-            if (useValues.length > 0) {
-              vmOutput.use = useValues.join('\n')
-            }
-          }
-        },
         emits(): void {
           if (
             vmContent.emits instanceof Array &&
@@ -393,6 +357,43 @@ function Vue2ToCompositionApi(
             if (refValues.length > 0) {
               vmOutput.refs = refValues.join('\n')
               utilMethods.addImport('vue', 'ref')
+            }
+          }
+        },
+        use(): void {
+          if (
+            vmKeys.use().length > 0 &&
+            vmContent.use !== null &&
+            typeof vmContent.use === 'object'
+          ) {
+            const useValues: string[] = []
+            for (const prop in vmContent.use) {
+              const useContent: string = vmContent.use[prop]
+              if (useContent) {
+                useValues.push(useContent)
+              }
+            }
+            if (useValues.length > 0) {
+              vmOutput.use = useValues.join('\n')
+            }
+          }
+        },
+        import(): void {
+          if (
+            vmKeys.import().length > 0 &&
+            vmContent.import !== null &&
+            typeof vmContent.import === 'object'
+          ) {
+            const importValues: string[] = []
+            for (const prop in vmContent.import) {
+              const importContent: string[] = vmContent.import[prop]
+              console.log('importContent', importContent)
+              if (importContent.length > 0) {
+                importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
+              }
+            }
+            if (importValues.length > 0) {
+              vmOutput.import = importValues.join('\n')
             }
           }
         },
