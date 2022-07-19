@@ -387,7 +387,6 @@ function Vue2ToCompositionApi(
             const importValues: string[] = []
             for (const prop in vmContent.import) {
               const importContent: string[] = vmContent.import[prop]
-              console.log('importContent', importContent)
               if (importContent.length > 0) {
                 importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
               }
