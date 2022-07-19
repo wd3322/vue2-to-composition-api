@@ -338,7 +338,7 @@ function Vue2ToCompositionApi(
                 emitValues.push(`\'${emitContent}\'`)
               }
             }
-            if (emitValues.length) {
+            if (emitValues.length > 0) {
               vmOutput.emits = `const emit = defineEmits([${emitValues.join(', ')}])`
             }
           }
