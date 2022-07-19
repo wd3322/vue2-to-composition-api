@@ -81,10 +81,10 @@ function Vue2ToCompositionApi(
 
       // vm hooks content init
       for (const prop in vmBody) {
-        if (
-          ['beforeCreate', 'created', 'beforeMount', 'mounted',
-            'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed',
-            'activated', 'deactivated', 'errorCaptured'].includes(prop) &&
+        if ([
+          'beforeCreate', 'created', 'beforeMount', 'mounted',
+          'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed',
+          'activated', 'deactivated', 'errorCaptured'].includes(prop) &&
           typeof vmBody[prop] === 'function'
         ) {
           vmContent.hooks[prop] = vmBody[prop]
@@ -483,7 +483,7 @@ function Vue2ToCompositionApi(
                 const body: string = content.substring(
                   Math.min(
                     ...utilMethods.getIndexArr({
-                      values: [') {', '=> {', '=> ('],
+                      values: [') {', ') => '],
                       content,
                       start: 0,
                       append: true
