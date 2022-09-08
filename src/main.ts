@@ -24,7 +24,7 @@ function Vue2ToCompositionApi(
     Object.keys(options).length > 0
   ) {
     try {
-      // output srcipt content init
+      // output script content init
       let outputScriptContent: string = ''
 
       // js-beautify init
@@ -693,7 +693,7 @@ function Vue2ToCompositionApi(
         }
       }
 
-      // output srcipt content beautify
+      // output script content beautify
       outputScriptContent = jsBeautify(outputScriptContent, jsBeautifyOptions)
 
       // debug console log
