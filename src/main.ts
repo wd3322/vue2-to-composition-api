@@ -11,7 +11,7 @@ declare global {
 }
 
 function Vue2ToCompositionApi(
-  entrySrciptContent: string = '',
+  entryScriptContent: string = '',
   options: {
     isDebug?: boolean
   } = {
@@ -19,13 +19,13 @@ function Vue2ToCompositionApi(
   }
 ): any {
   if (
-    typeof entrySrciptContent === 'string' &&
+    typeof entryScriptContent === 'string' &&
     typeof options === 'object' &&
     Object.keys(options).length > 0
   ) {
     try {
       // output srcipt content init
-      let outputSrciptContent: string = ''
+      let outputScriptContent: string = ''
 
       // js-beautify init
       const jsBeautify: any = require('js-beautify')
@@ -59,7 +59,7 @@ function Vue2ToCompositionApi(
 
       // vm body init
       window.Vue2ToCompositionApiVmBody = {}
-      const scriptContent: string = jsBeautify(entrySrciptContent, jsBeautifyOptions)
+      const scriptContent: string = jsBeautify(entryScriptContent, jsBeautifyOptions)
       eval(scriptContent.replace('export default', 'window.Vue2ToCompositionApiVmBody ='))
       const vmBody: any = window.Vue2ToCompositionApiVmBody
 
@@ -405,7 +405,7 @@ function Vue2ToCompositionApi(
             }
           }
           if (outputValues.length > 0) {
-            outputSrciptContent = outputValues.join('\n\n')
+            outputScriptContent = outputValues.join('\n\n')
           }
         }
       }
@@ -694,13 +694,13 @@ function Vue2ToCompositionApi(
       }
 
       // output srcipt content beautify
-      outputSrciptContent = jsBeautify(outputSrciptContent, jsBeautifyOptions)
+      outputScriptContent = jsBeautify(outputScriptContent, jsBeautifyOptions)
 
       // debug console log
       if (options.isDebug) {
         console.log('Vue2ToCompositionApi', {
-          entrySrciptContent,
-          outputSrciptContent,
+          entryScriptContent,
+          outputScriptContent,
           vmBody,
           vmContent,
           vmOutput,
@@ -709,7 +709,7 @@ function Vue2ToCompositionApi(
       }
 
       // done
-      return outputSrciptContent
+      return outputScriptContent
     } catch (err: any) {
       throw new Error(err)
     }
