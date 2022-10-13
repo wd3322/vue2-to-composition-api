@@ -146,7 +146,7 @@ function Vue2ToCompositionApi(
             })
             if (dataFunctionStr) {
               const dataContentStr: string = dataFunctionStr.substring(dataFunctionStr.indexOf('return {\n') + 7, dataFunctionStr.length - 1)
-              vmOutput.data = `const data = reactive(${dataContentStr})`
+              vmOutput.data = `const data = reactive(${dataContentStr.replace(/;\s*$/, '')})`
               utilMethods.addImport('vue', 'reactive')
             }
           }
