@@ -244,8 +244,8 @@ function Vue2ToCompositionApi(
                     )
                   }
                 } else if ([
-                  'beforeMount', 'mounted', 'beforeUpdate', 'updated',
-                  'beforeDestroy', 'destroyed', 'deactivated', 'errorCaptured'].includes(hookContent.name)
+                  'beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed',
+                  'activated', 'deactivated', 'errorCaptured'].includes(hookContent.name)
                 ) {
                   const v3HooksNameDist: any = {
                     beforeMount: 'onBeforeMount',
