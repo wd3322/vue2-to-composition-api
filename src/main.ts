@@ -543,14 +543,13 @@ function Vue2ToCompositionApi(
                     append: false
                   })
                 ))
-                const setCurrentInstance: any = (): void => {
-                  contents[i] = content.replace(key, `$vm.${key}`)
-                  utilMethods.addImport('vue', 'getCurrentInstance')
-                  utilMethods.addUse('vm')
-                }
                 const resetCurrentInstance: any = (message: string): void => {
-                  const annotation: string = `// Error: ${message}`
-                  contents[i] = options.separator ? content.replace(key, `${annotation}\n${options.separator}${key}`) : `${annotation}\n${content}`
+                  if (message) {
+                    const annotation: string = `// Error: ${message}`
+                    contents[i] = options.separator ? content.replace(key, `${annotation}\n${options.separator}${key}`) : `${annotation}\n${content}`
+                  } else {
+                    contents[i] = options.separator ? content.replace(key, `${options.separator}${key}`) : `${content}`
+                  } 
                 }
                 if (vmKeys.props.includes(key)) {
                   contents[i] = content.replace(key, `props.${key}`)
@@ -640,8 +639,12 @@ function Vue2ToCompositionApi(
                   } else {
                     resetCurrentInstance('Cannot find refs name')
                   }
+                } else if (key) {
+                  contents[i] = content.replace(key, `$vm.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
                 } else {
-                  setCurrentInstance()
+                  resetCurrentInstance()
                 }
               }
             }
