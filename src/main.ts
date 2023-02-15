@@ -374,7 +374,7 @@ function Vue2ToCompositionApi(
               }
             }
             if (useValues.length > 0) {
-              vmOutput.use = useValues.join('\n')
+              vmOutput.use = useValues.sort().join('\n')
             }
           }
         },
@@ -388,7 +388,7 @@ function Vue2ToCompositionApi(
             for (const prop in vmContent.import) {
               const importContent: string[] = vmContent.import[prop]
               if (importContent.length > 0) {
-                importValues.push(`import { ${importContent.join(', ')} } from \'${prop}\'`)
+                importValues.push(`import { ${importContent.sort().join(', ')} } from \'${prop}\'`)
               }
             }
             if (importValues.length > 0) {
@@ -532,8 +532,9 @@ function Vue2ToCompositionApi(
             Object.keys(options).length > 0
           ) {
             const contents: string[] = options.separator ? value.split(options.separator) : [value]
-            if (contents.length > 0) {
-              for (let i = 0; i < contents.length; i++) {
+            const contentsBeginIndex: number = options.separator ? 1 : 0
+            if (contents.length > contentsBeginIndex) {
+              for (let i = contentsBeginIndex; i < contents.length; i++) {
                 const content: string = contents[i]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
