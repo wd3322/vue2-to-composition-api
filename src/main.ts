@@ -543,8 +543,14 @@ function Vue2ToCompositionApi(
                     append: false
                   })
                 ))
-                const reset: any = (): void => {
-                  contents[i] = options.separator ? content.replace(key, `${options.separator}${key}`) : content
+                const setCurrentInstance: any = (): void => {
+                  contents[i] = content.replace(key, `$vm.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
+                }
+                const resetCurrentInstance: any = (message: string): void => {
+                  const annotation: string = `// Error: ${message}`
+                  contents[i] = options.separator ? content.replace(key, `${annotation}\n${options.separator}${key}`) : `${annotation}\n${content}`
                 }
                 if (vmKeys.props.includes(key)) {
                   contents[i] = content.replace(key, `props.${key}`)
@@ -557,16 +563,7 @@ function Vue2ToCompositionApi(
                   contents[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
                   contents[i] = content
-                } else if ([
-                  '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
-                  '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
-                ) {
-                  contents[i] = content.replace(key, `$vm.proxy.${key}`)
-                  utilMethods.addImport('vue', 'getCurrentInstance')
-                  utilMethods.addUse('vm')
-                } else if ([
-                  '$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)
-                ) {
+                } else if (['$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)) {
                   contents[i] = content.replace('$', '')
                   if (key === '$attrs') {
                     utilMethods.addImport('vue', 'useAttrs')
@@ -615,7 +612,7 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = content.replace('$', '')
                   } else {
-                    reset()
+                    resetCurrentInstance('Cannot find emit event')
                   }
                 } else if (key === '$refs') {
                   const beginIndex: number = Math.min(
@@ -641,10 +638,10 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
                   } else {
-                    reset()
+                    resetCurrentInstance('Cannot find refs name')
                   }
                 } else {
-                  reset()
+                  setCurrentInstance()
                 }
               }
             }
@@ -670,7 +667,7 @@ function Vue2ToCompositionApi(
             ['data', 'vm', 'attrs', 'slots', 'router', 'route', 'store'].includes(type)
           ) {
             const contentDist: any = {
-              vm: 'const $vm = getCurrentInstance()',
+              vm: 'const { proxy: $vm } = getCurrentInstance()',
               data: 'const useData = () => data',
               attrs: 'const attrs = useAttrs()',
               slots: 'const slots = useSlots()',
