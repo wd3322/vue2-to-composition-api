@@ -30,39 +30,6 @@
 ## Methods 方法转换
 ![methods](https://wd3322.github.io/to-vue3/img/methods.png)
 
-## Install 安装
-```node
-npm install vue2-to-composition-api
-```
-
-## Conversion 使用转换
-```javascript
-import Vue2ToCompositionApi from 'vue2-to-composition-api'
-
-const vue2ScriptContentStr = `
-export default {
-  name: 'Sample',
-  props: {
-    userInfo: {
-      type: Object,
-      required: false,
-      default: () => ({
-        userName: 'Todd Cochran',
-        userAge: 20
-      })
-    }
-  },
-  data() {
-    return {
-      firstName: '',
-      lastName: ''
-    }
-  }
-}`
-const vue3ScriptContentStr = Vue2ToCompositionApi(vue2ScriptContentStr)
-console.log('Hello! Composition API\n', vue3ScriptContentStr)
-```
-
 ## 无法解析的内容
 
 请不要键入 `Mixin`、`Component` 等外部内容，转换器无法解析外部的文件，`Mixin` 混入内部的变量与方法都需另外手工处理，动态变量或者拼接的内容也同样无法被解析或解析错误
