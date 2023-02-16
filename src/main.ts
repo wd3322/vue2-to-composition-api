@@ -544,14 +544,6 @@ function Vue2ToCompositionApi(
                     append: false
                   })
                 ))
-                const resetCurrentInstance: any = (message: string): void => {
-                  if (message) {
-                    const annotation: string = `// Error: ${message}`
-                    contents[i] = options.separator ? content.replace(key, `${annotation}\n${options.separator}${key}`) : `${annotation}\n${content}`
-                  } else {
-                    contents[i] = options.separator ? content.replace(key, `${options.separator}${key}`) : `${content}`
-                  } 
-                }
                 if (vmKeys.props.includes(key)) {
                   contents[i] = content.replace(key, `props.${key}`)
                 } else if (vmKeys.data.includes(key) && options.dataKeyToUseData) {
@@ -563,7 +555,16 @@ function Vue2ToCompositionApi(
                   contents[i] = content.replace(key, `${key}.value`)
                 } else if (vmKeys.methods.includes(key)) {
                   contents[i] = content
-                } else if (['$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)) {
+                } else if ([
+                  '$data', '$props', '$el', '$options', '$parent', '$root', '$children', '$isServer',
+                  '$listeners', '$watch', '$on', '$once', '$off', '$mount', '$forceUpdate', '$destroy'].includes(key)
+                ) {
+                  contents[i] = content.replace(key, `$vm.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
+                } else if ([
+                  '$attrs', '$slots', '$router', '$route', '$store', '$nextTick', '$set', '$delete'].includes(key)
+                ) {
                   contents[i] = content.replace('$', '')
                   if (key === '$attrs') {
                     utilMethods.addImport('vue', 'useAttrs')
@@ -612,7 +613,7 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = content.replace('$', '')
                   } else {
-                    resetCurrentInstance('Cannot find emit event')
+                    contents[i] = content.replace(key, `/* Warn: Cannot find emit event */${options.separator}${key}`)
                   }
                 } else if (key === '$refs') {
                   const beginIndex: number = Math.min(
@@ -638,14 +639,12 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
                   } else {
-                    resetCurrentInstance('Cannot find refs name')
+                    contents[i] = content.replace(key, `/* Warn: Cannot find refs name */${options.separator}${key}`)
                   }
                 } else if (key) {
-                  contents[i] = content.replace(key, `$vm.${key}`)
-                  utilMethods.addImport('vue', 'getCurrentInstance')
-                  utilMethods.addUse('vm')
+                  contents[i] = content.replace(key, `/* Warn: Unknown source '${key}' */${options.separator}${key}`)
                 } else {
-                  resetCurrentInstance()
+                  contents[i] = options.separator ? content.replace(key, `${options.separator}${key}`) : `${content}`
                 }
               }
             }
