@@ -544,6 +544,11 @@ function Vue2ToCompositionApi(
                     append: false
                   })
                 ))
+                const resetCurrentInstance: any = (message: string): void => {
+                  contents[i] = content.replace(key, `/* Warn: ${message} */ $vm.${key}`)
+                  utilMethods.addImport('vue', 'getCurrentInstance')
+                  utilMethods.addUse('vm')
+                }
                 if (vmKeys.props.includes(key)) {
                   contents[i] = content.replace(key, `props.${key}`)
                 } else if (vmKeys.data.includes(key) && options.dataKeyToUseData) {
@@ -613,7 +618,7 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = content.replace('$', '')
                   } else {
-                    contents[i] = content.replace(key, `/* Warn: Cannot find emit event */${options.separator}${key}`)
+                    resetCurrentInstance('Cannot find emit event')
                   }
                 } else if (key === '$refs') {
                   const beginIndex: number = Math.min(
@@ -639,10 +644,10 @@ function Vue2ToCompositionApi(
                     }
                     contents[i] = `${refsName}.value${content.substring(content.indexOf(refsName) + refsName.length, content.length)}`
                   } else {
-                    contents[i] = content.replace(key, `/* Warn: Cannot find refs name */${options.separator}${key}`)
+                    resetCurrentInstance('Cannot find refs name')
                   }
                 } else if (key) {
-                  contents[i] = content.replace(key, `/* Warn: Unknown source '${key}' */${options.separator}${key}`)
+                  resetCurrentInstance(`Unknown source '${key}'`)
                 } else {
                   contents[i] = options.separator ? content.replace(key, `${options.separator}${key}`) : `${content}`
                 }
