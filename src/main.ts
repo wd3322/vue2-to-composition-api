@@ -538,7 +538,7 @@ function Vue2ToCompositionApi(
                 const content: string = contents[i]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
-                    values: ['\n', '\t', ' ', '.', ',', ';', '?', '[', ']', ')', '(', '+', '-'],
+                    values: ['\n', '\t', ' ', '.', ',', ';', '?', '[', ']', ')', '(', '+', '-', '{', '}'],
                     content,
                     start: 0,
                     append: false
