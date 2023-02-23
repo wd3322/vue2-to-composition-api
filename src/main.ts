@@ -536,9 +536,14 @@ function Vue2ToCompositionApi(
             if (contents.length > contentsBeginIndex) {
               for (let i = contentsBeginIndex; i < contents.length; i++) {
                 const content: string = contents[i]
+                const terminator: string[] = [
+                  '\n', '\t', '\'', '\"', '\`', '\ ',
+                  '.', ',', ';','?', '!', '[', ']','{', '}', ')', '(',
+                  '+', '-', '*', '/', '%',  '>', '<', '^', '~', '&', '|'
+                ]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
-                    values: ['\n', '\t', '\'', '"', ' ', '.', ',', ';','?', '[', ']','{', '}', ')', '(', '+', '-'],
+                    values: terminator,
                     content,
                     start: 0,
                     append: false
@@ -597,7 +602,7 @@ function Vue2ToCompositionApi(
                 } else if (key === '$emit') {
                   const beginIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: ['$emit(\'', '$emit("', '$emit(`', '$emit([\'', '$emit(["', '$emit([`'],
+                      values: ['$emit(\'', '$emit(\"', '$emit(\`', '$emit([\'', '$emit([\"', '$emit([\`'],
                       content,
                       start: 0,
                       append: true
@@ -605,7 +610,7 @@ function Vue2ToCompositionApi(
                   )
                   const endIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: ['\'', '"', '`'],
+                      values: ['\'', '\"', '\`'],
                       content,
                       start: beginIndex,
                       append: false
@@ -631,7 +636,7 @@ function Vue2ToCompositionApi(
                   )
                   const endIndex: number = Math.min(
                     ...utilMethods.getIndexArr({
-                      values: ['\n', '\t', ' ', '.', ',', '?', '[', ')'],
+                      values: terminator,
                       content,
                       start: beginIndex,
                       append: false
