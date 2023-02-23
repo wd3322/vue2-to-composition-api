@@ -538,8 +538,8 @@ function Vue2ToCompositionApi(
                 const content: string = contents[i]
                 const terminator: string[] = [
                   '\n', '\t', '\'', '\"', '\`', '\ ',
-                  '.', ',', ';','?', '!', '[', ']','{', '}', ')', '(',
-                  '+', '-', '*', '/', '%',  '>', '<', '^', '~', '&', '|'
+                  '.', ',', ';', '?', '!', '[', ']', '{', '}', ')', '(',
+                  '=', '+', '-', '*', '/', '%', '>', '<', '^', '~', '&', '|'
                 ]
                 const key: string = content.substring(0, Math.min(
                   ...utilMethods.getIndexArr({
