@@ -1,6 +1,6 @@
 .DS_Store
 /node_modules
-/dist
+/lib
 .babelrc
 .eslintrc.js
 package-lock.json

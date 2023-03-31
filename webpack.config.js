@@ -5,9 +5,9 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/main.ts',
   output: {
-    path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
-    filename: 'main.js',
+    path: path.resolve(__dirname, './lib'),
+    publicPath: '/lib/',
+    filename: 'index.js',
     libraryTarget: 'umd',
     umdNamedDefine: true
   },
