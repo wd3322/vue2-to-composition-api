@@ -83,10 +83,10 @@ function Vue2ToCompositionApi(
   }
 ): string | undefined {
   if (typeof entryScriptContent !== 'string') {
-    throw { message: `Error: ${entryScriptContent} is not a string` }
+    throw { message: `[vue2-to-composition-api error] content is not a string` }
   }
   if (typeof options !== 'object') {
-    throw { message: `Error: ${options} is not a object` }
+    throw { message: `[vue2-to-composition-api error] options is not a object` }
   }
   try {
     // output script content init
@@ -189,7 +189,7 @@ function Vue2ToCompositionApi(
       props(): void {
         if (
           vmKeys.props.length > 0 &&
-          vmContent.props !== null &&
+          vmContent.props &&
           typeof vmContent.props === 'object'
         ) {
           const propsContentStr: string = utilMethods.getContentStr(vmContent.props, {
@@ -203,7 +203,7 @@ function Vue2ToCompositionApi(
       data(): void {
         if (
           vmKeys.data.length > 0 &&
-          vmContent.dataOptions !== null &&
+          vmContent.dataOptions &&
           typeof vmContent.dataOptions === 'object'
         ) {
           const dataFunctionStr: string = utilMethods.getContentStr(vmContent.data, {
@@ -219,14 +219,14 @@ function Vue2ToCompositionApi(
       computed(): void {
         if (
           vmKeys.computed.length > 0 &&
-          vmContent.computed !== null &&
+          vmContent.computed &&
           typeof vmContent.computed === 'object'
         ) {
           const computedValues: string[] = []
           for (const prop in vmContent.computed) {
             const computedContent: any = vmContent.computed[prop]
             if (
-              computedContent !== null &&
+              computedContent &&
               (typeof computedContent === 'object' || typeof computedContent === 'function')
             ) {
               const computedName: string = typeof computedContent === 'function' ? computedContent.name : prop
@@ -247,7 +247,7 @@ function Vue2ToCompositionApi(
       watch(): void {
         if (
           vmKeys.watch.length > 0 &&
-          vmContent.watch !== null &&
+          vmContent.watch &&
           typeof vmContent.watch === 'object'
         ) {
           const watchValues: string[] = []
@@ -262,7 +262,7 @@ function Vue2ToCompositionApi(
                 watchValues.push(`watch(() => ${watchName}, ${watchFunctionStr})`)
               }
             } else if (
-              watchContent !== null &&
+              watchContent &&
               typeof watchContent === 'object' &&
               typeof watchContent.handler === 'function'
             ) {
@@ -291,7 +291,7 @@ function Vue2ToCompositionApi(
       hooks(): void {
         if (
           vmKeys.hooks.length > 0 &&
-          vmContent.hooks !== null &&
+          vmContent.hooks &&
           typeof vmContent.hooks === 'object'
         ) {
           const hookValues: string[] = []
@@ -346,7 +346,7 @@ function Vue2ToCompositionApi(
       methods(): void {
         if (
           vmKeys.methods.length > 0 &&
-          vmContent.methods !== null &&
+          vmContent.methods &&
           typeof vmContent.methods === 'object'
         ) {
           const methodValues: string[] = []
@@ -372,7 +372,7 @@ function Vue2ToCompositionApi(
       filters(): void {
         if (
           vmKeys.filters.length > 0 &&
-          vmContent.filters !== null &&
+          vmContent.filters &&
           typeof vmContent.filters === 'object'
         ) {
           const filterValues: string[] = []
@@ -428,7 +428,7 @@ function Vue2ToCompositionApi(
       use(): void {
         if (
           vmKeys.use().length > 0 &&
-          vmContent.use !== null &&
+          vmContent.use &&
           typeof vmContent.use === 'object'
         ) {
           const useValues: string[] = []
@@ -446,7 +446,7 @@ function Vue2ToCompositionApi(
       import(): void {
         if (
           vmKeys.import().length > 0 &&
-          vmContent.import !== null &&
+          vmContent.import &&
           typeof vmContent.import === 'object'
         ) {
           const importValues: string[] = []
@@ -565,7 +565,7 @@ function Vue2ToCompositionApi(
               values.push(content)
             }
             result = values.length > 0 ? `[${values.join(', ')}]` : '[]'
-          } else if (typeof value === 'object' && value !== null) {
+          } else if (value && typeof value === 'object') {
             const values: string[] = []
             for (const prop in value) {
               if (!options.excludeProps?.includes(prop)) {
