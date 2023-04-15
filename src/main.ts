@@ -82,11 +82,11 @@ function Vue2ToCompositionApi(
     isDebug: false
   }
 ): string | undefined {
-  if (typeof entryScriptContent !== 'string') {
-    throw { message: `[vue2-to-composition-api error] content is not a string` }
+  if (!entryScriptContent || typeof entryScriptContent !== 'string') {
+    throw new Error(`Vue2ToCompositionApi ${entryScriptContent} is not a string`)
   }
-  if (typeof options !== 'object') {
-    throw { message: `[vue2-to-composition-api error] options is not a object` }
+  if (!options || typeof options !== 'object') {
+    throw new Error(`Vue2ToCompositionApi ${options} is not a object`)
   }
   try {
     // output script content init
