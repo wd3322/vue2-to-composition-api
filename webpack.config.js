@@ -2,7 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
  
 module.exports = {
-  devtool: 'source-map',
+  devtool: false,
   entry: './src/main.ts',
   output: {
     path: path.resolve(__dirname, './lib'),
