@@ -135,8 +135,8 @@ function Vue2ToCompositionApi(
     // vm content init
     const vmContent: VmContent = {
       props: getPrototype(vmBody.props) === 'object' ? vmBody.props : {},
-      data: getPrototype(vmBody.data) === 'function' ? vmBody.data : () => ({}),
-      dataOptions: getPrototype(vmBody.data) === 'function' ? vmBody.data() : {},
+      data: getPrototype(vmBody.data).indexOf('function') !== -1 ? vmBody.data : () => ({}),
+      dataOptions: getPrototype(vmBody.data).indexOf('function') !== -1 ? vmBody.data() : {},
       computed: getPrototype(vmBody.computed) === 'object' ? vmBody.computed : {},
       watch: getPrototype(vmBody.watch) === 'object' ? vmBody.watch : {},
       methods: getPrototype(vmBody.methods) === 'object' ? vmBody.methods : {},
@@ -154,7 +154,7 @@ function Vue2ToCompositionApi(
         ['beforeCreate', 'created', 'beforeMount', 'mounted',
           'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed',
           'activated', 'deactivated', 'errorCaptured'].includes(prop) &&
-          getPrototype(vmBody[prop]) === 'function'
+        getPrototype(vmBody[prop]).indexOf('function') !== -1
       ) {
         vmContent.hooks[prop] = vmBody[prop]
       }
@@ -223,9 +223,9 @@ function Vue2ToCompositionApi(
           const computedContent: any = vmContent.computed[prop]
           if (
             computedContent &&
-            ['object', 'function'].includes(getPrototype(computedContent))
+            ['object', 'function', 'asyncfunction'].includes(getPrototype(computedContent))
           ) {
-            const computedName: string = getPrototype(computedContent) === 'function' ? computedContent.name : prop
+            const computedName: string = getPrototype(computedContent).indexOf('function') !== -1 ? computedContent.name : prop
             const computedFunctionStr: string = utilMethods.getContentStr(computedContent, {
               arrowFunction: true
             })
@@ -246,7 +246,7 @@ function Vue2ToCompositionApi(
         const watchValues: string[] = []
         for (const prop in vmContent.watch) {
           const watchContent: any = vmContent.watch[prop]
-          if (getPrototype(watchContent) === 'function') {
+          if (getPrototype(watchContent).indexOf('function') !== -1) {
             const watchName: string = utilMethods.replaceKey(watchContent.name)
             const watchFunctionStr: string = utilMethods.getContentStr(watchContent, {
               arrowFunction: true
@@ -257,7 +257,7 @@ function Vue2ToCompositionApi(
           } else if (
             watchContent &&
             getPrototype(watchContent) === 'object' &&
-            getPrototype(watchContent.handler) === 'function'
+            getPrototype(watchContent.handler).indexOf('function') !== -1
           ) {
             const watchName: string = utilMethods.replaceKey(prop)
             const watchFunctionStr: string = utilMethods.getContentStr(watchContent.handler, {
@@ -287,7 +287,7 @@ function Vue2ToCompositionApi(
         const hookValues: string[] = []
         for (const prop in vmContent.hooks) {
           const hookContent: any = vmContent.hooks[prop]
-          if (getPrototype(hookContent) === 'function') {
+          if (getPrototype(hookContent).indexOf('function') !== -1) {
             if (['beforeCreate', 'created'].includes(hookContent.name)) {
               const hookName: string = `on${hookContent.name.substring(0, 1).toUpperCase()}${hookContent.name.substring(1)}`
               const hookFunctionStr: string = utilMethods.getContentStr(hookContent)
@@ -339,7 +339,7 @@ function Vue2ToCompositionApi(
         const methodValues: string[] = []
         for (const prop in vmContent.methods) {
           const methodContent: any = vmContent.methods[prop]
-          if (getPrototype(methodContent) === 'function') {
+          if (getPrototype(methodContent).indexOf('function') !== -1) {
             const methodName: string = methodContent.name
             const methodFunctionStr: string = utilMethods.getContentStr(methodContent)
             if (methodName && methodFunctionStr) {
@@ -362,7 +362,7 @@ function Vue2ToCompositionApi(
         const filterValues: string[] = []
         for (const prop in vmContent.filters) {
           const filterContent: any = vmContent.filters[prop]
-          if (getPrototype(filterContent) === 'function') {
+          if (getPrototype(filterContent).indexOf('function') !== -1) {
             const filterName: string = filterContent.name
             const filterFunctionStr: string = utilMethods.getContentStr(filterContent)
             if (filterName && filterFunctionStr) {
@@ -498,7 +498,7 @@ function Vue2ToCompositionApi(
         let result: string = ''
         if (getPrototype(value) === 'string') {
           result = `\'${value}\'`
-        } else if (getPrototype(value) === 'function') {
+        } else if (getPrototype(value).indexOf('function') !== -1) {
           let content: string = value.toString()
           if (content.includes('[native code]')) {
             result = `${value.name}`
@@ -735,7 +735,7 @@ function Vue2ToCompositionApi(
     // vm set content methods runing
     for (const prop in vmSetContentMethods) {
       const vmSetContentMethod: Function = vmSetContentMethods[prop as keyof VmSetContentMethods]
-      if (getPrototype(vmSetContentMethod) === 'function') {
+      if (getPrototype(vmSetContentMethod).indexOf('function') !== -1) {
         vmSetContentMethod()
       }
     }
