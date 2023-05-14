@@ -465,9 +465,7 @@ function Vue2ToCompositionApi(
         }
       }
     }
-
     
-
     // util methods init
     const utilMethods: UtilsMethods = {
       getContentStr(
@@ -723,16 +721,15 @@ function Vue2ToCompositionApi(
           })        
         return result
       },
-      addImport(type: string, value: string): void | boolean {
+      addImport(type: string, value: string): void {
         if (['vue', 'vue-router', 'vuex'].includes(type)) {
           const importContent: string[] = vmContent.import[type]
           if (!importContent?.includes(value)) {
             importContent.push(value)
           }
-          return true
         }
       },
-      addUse(type: string): void | boolean {
+      addUse(type: string): void {
         if (['data', 'vm', 'attrs', 'slots', 'router', 'route', 'store'].includes(type)) {
           const contentDist: any = {
             vm: 'const { proxy: $vm } = getCurrentInstance()',
@@ -747,7 +744,6 @@ function Vue2ToCompositionApi(
           if (useContent) {
             vmContent.use[type] = useContent
           }
-          return true
         }
       }
     }
