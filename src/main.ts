@@ -6,7 +6,8 @@
 
 declare global {
   interface Window {
-    Vue2ToCompositionApiVmBody: any
+    Vue2ToCompositionApiVmBody: any,
+    require: any
   }
 }
 
@@ -112,6 +113,7 @@ function Vue2ToCompositionApi(
 
     // vm body init
     window.Vue2ToCompositionApiVmBody = {}
+    window.require = function() {}
     const beautifyScriptContent: string = jsBeautify(entryScriptContent, jsBeautifyOptions)
     const modelScriptContent: string | undefined = (function() {
       const componentsRegExp: RegExp = /components: ((\{\})|(\{[\s\S]+?\}))[\,\n]/
