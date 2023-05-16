@@ -2,7 +2,7 @@
 
 ## 网站
 
-[Gitee: vue2-to-composition-api](http://wd3322.gitee.io/to-vue3/)
+[Gitee: vue2-to-composition-api](https://wd3322.gitee.io/to-vue3/)
 
 [Github: vue2-to-composition-api](https://wd3322.github.io/to-vue3/)
 
@@ -30,23 +30,7 @@
 ## Methods 方法转换
 ![methods](https://wd3322.github.io/to-vue3/img/methods.png)
 
-## 无法解析的内容
-
-请不要键入 `Mixin`、`Component` 等外部内容，转换器无法解析外部的文件，`Mixin` 混入内部的变量与方法都需另外手工处理，动态变量或者拼接的内容也同样无法被解析或解析错误
-
-```javascript
-export default {
-  name: 'Sample',
-  mixins: [myMixin],
-  components: { Echart },
-  methods: {
-    onSubmit(propName) {
-      this[propName] = '123'
-      this.$emit(propName + '-change')
-    }
-  }
-}
-```
+---
 
 ## Template中的Data变更
 
@@ -91,6 +75,8 @@ const data = reactive({
 
 data.userInfo = { name: 'Casey Adams', age: 80 }
 ```
+
+---
 
 ## Template中的Filter变更
 
@@ -140,6 +126,23 @@ const $vm = getCurrentInstance()
 const router = $vm.proxy.$router
 const route = $vm.proxy.$route
 const store = $vm.proxy.$store
+```
+
+---
+
+## 无法解析的内容
+
+动态变量或者拼接的内容无法被解析或解析错误
+
+```javascript
+export default {
+  methods: {
+    onSubmit(propName) {
+      this[propName] = '123'
+      this.$emit(propName + '-change')
+    }
+  }
+}
 ```
 
 ---
