@@ -287,7 +287,7 @@ function Vue2ToCompositionApi(
         }
       },
       hooks(): void {
-        if (vmKeys.hooks.length === 0) {
+        if (vmKeys.hooks.length > 0) {
           const hookValues: string[] = []
           for (const prop in vmContent.hooks) {
             const hookContent: any = vmContent.hooks[prop]
