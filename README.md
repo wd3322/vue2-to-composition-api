@@ -117,7 +117,7 @@ function toMarried(value) {
 
 ## Vue2.7中延用Router3.x、Vuex3.x
 
-如若不想在 `Vue2.7` 项目中更新 `Router4` 与 `Vuex4` ，可以从 `vue` 实例中获取 `Router`、`Router`、`Store`
+如若不想在 `Vue2.7` 项目中更新 `Router4, Vuex4` ，可以从 `Vue` 实例中获取 `Router, Route, Store`
 
 ```javascript
 import { getCurrentInstance } from 'vue'
